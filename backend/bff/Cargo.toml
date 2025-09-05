@@ -5,3 +5,7 @@ edition = "2024"
 
 [dependencies]
 axum = "0.8.4"
+prost = "0.14.1"
+tokio = "1.47.1"
+tonic = "0.14.2"
+tonic-build = "0.14.2"
