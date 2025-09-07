@@ -43,7 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             s.spawn(move || {
                 let proto_file = format!("{}/{}/proto/{}.proto", services_dir, service_name, proto_name);
                 let include_path = format!("{}/{}/proto", services_dir, service_name);
-                let output_path = std::path::PathBuf::from(format!("{}/{}/proto", services_dir, service_name));
+                let output_path = std::path::PathBuf::from(format!("{}/{}/src/proto", services_dir, service_name));
                 
                 std::fs::create_dir_all(&output_path).unwrap();
                 

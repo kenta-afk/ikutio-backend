@@ -1,3 +1,5 @@
 pub enum AuthError {
-    InternalError(&str)
+    UserNotFound,
+    FailedHashError,
+    InvalidPassword,
 }

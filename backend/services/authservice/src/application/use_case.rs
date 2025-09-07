@@ -1,0 +1,124 @@
+use crate::domain::models::auth::AuthenticatedUser;
+use crate::domain::models::error::AuthError;
+use crate::infrastructure::jwt_generator::JwtGenerator;
+use crate::{domain::auth_repository::AuthRepository, infrastructure::uuid_generator::UuidGenerator};
+use crate::application::commands::login_command::LoginCommand;
+use crate::application::dtos::login_dto::LoginDto;
+use crate::proto::auth_service_server::AuthService;
+use crate::proto::{LoginRequest, LoginReply};
+use tonic::{Request, Response, Status};
+
+pub struct AuthServiceImpl<AR, UG, JG>
+where 
+    AR: AuthRepository,
+    UG: UuidGenerator,
+    JG: JwtGenerator,
+{
+    auth_repository: AR,
+    uuid_generator: UG,
+    jwt_generator: JG,
+}
+
+impl<AR, UG, JG> AuthServiceImpl<AR, UG, JG>
+where
+    AR: AuthRepository,
+    UG: UuidGenerator,
+    JG: JwtGenerator,
+{
+    pub fn new(auth_repository: AR, uuid_generator: UG, jwt_generator: JG) -> Self {
+        AuthServiceImpl { auth_repository, uuid_generator, jwt_generator }
+    }
+
+    pub async fn login(&self, login_command: LoginCommand) -> Result<LoginDto, AuthError> {  
+        let email = login_command.email;  
+        let password = login_command.password;  
+    
+        let user = match self.auth_repository.find_by_email(&email).await {  
+            Some(existing_user) => {  
+                if !existing_user.verify_password(password, &existing_user.password) {  
+                    return Err(AuthError::InvalidPassword);  
+                }  
+                existing_user  
+            },  
+            None => {   
+                let new_user = AuthenticatedUser::new(  
+                    email,  
+                    password,  
+                    &self.uuid_generator,  
+                );  
+
+                let hashed_password = new_user.hash_password(&new_user.password)?;
+
+                let new_user = AuthenticatedUser {  
+                    password: hashed_password,  
+                    ..new_user  
+                };
+                self.auth_repository.save(&new_user).await?;  
+                new_user  
+            }  
+        };  
+    
+        let jwt = self.jwt_generator.new_jwt(user.id);  
+        let refresh_token = self.jwt_generator.new_refresh_token(user.id);  
+    
+        Ok(LoginDto {  
+            token: jwt,  
+            refresh_token,  
+            id: user.id,  
+        })  
+    }
+}
+
+impl From<LoginRequest> for LoginCommand {
+    fn from(request: LoginRequest) -> Self {
+        LoginCommand {
+            email: request.email,
+            password: request.password,
+        }
+    }
+}
+
+impl From<LoginDto> for LoginReply {
+    fn from(dto: LoginDto) -> Self {
+        LoginReply {
+            jwt: dto.token,
+            refresh_token: dto.refresh_token,
+            id: dto.id.to_string(),
+        }
+    }
+}
+
+impl From<AuthError> for Status {
+    fn from(error: AuthError) -> Self {
+        match error {
+            AuthError::InvalidPassword => {
+                Status::unauthenticated("Invalid password")
+            },
+            AuthError::FailedHashError => {
+                Status::internal("Internal server error")
+            },
+            AuthError::UserNotFound => {
+                Status::not_found("User not found")
+            },
+        }
+    }
+}
+
+#[tonic::async_trait]
+impl<AR, UG, JG> AuthService for AuthServiceImpl<AR, UG, JG>
+where
+    AR: AuthRepository + Send + Sync + 'static,
+    UG: UuidGenerator + Send + Sync + 'static,
+    JG: JwtGenerator + Send + Sync + 'static,
+{
+    async fn login(
+        &self,
+        request: Request<LoginRequest>,
+    ) -> Result<Response<LoginReply>, Status> {
+        // .into()で型変換してからuse caseのloginメソッドを呼び出し
+        match AuthServiceImpl::login(self, request.into_inner().into()).await {
+            Ok(login_dto) => Ok(Response::new(login_dto.into())),
+            Err(auth_error) => Err(auth_error.into()),
+        }
+    }
+}
