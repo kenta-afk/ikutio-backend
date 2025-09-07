@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use sqlx::PgPool;
 
-use crate::domain::{auth_repository::AuthRepository, models::auth::AuthenticatedUser};
+use crate::domain::{auth_repository::AuthRepository, models::{auth::AuthenticatedUser, error::AuthError}};
 
 pub struct AuthRepositoryImpl{
     pool: PgPool,
@@ -12,10 +12,10 @@ impl AuthRepository for AuthRepositoryImpl {
     fn new(pool: PgPool) -> Self {
         Self { pool }
     }
-    async fn save(&self, user: AuthenticatedUser) -> Result<(), AuthError> {
+    async fn save(&self, user: &AuthenticatedUser) -> Result<(), AuthError> {
         sqlx::query_as!(
             AuthenticatedUser,
-            "INSERT INTO users (id, email, password) VALUES ($1, $2, $3, $4)",
+            "INSERT INTO users (id, email, password) VALUES ($1, $2, $3)",
             user.id,
             user.email,
             user.password
