@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
-use tonic::{Request, Response, Status};
+use tonic::Status;
 
-use crate::proto::auth_service_server::AuthService;
 use crate::proto::{LoginRequest, LoginReply};
 use crate::application::use_case::AuthServiceImpl;
 use crate::application::commands::login_command::LoginCommand;
@@ -69,25 +68,6 @@ where
     pub fn new(auth_service: AuthServiceImpl<AR, UG, JG>) -> Self {
         Self {
             auth_service: Arc::new(auth_service),
-        }
-    }
-}
-
-#[tonic::async_trait]
-impl<AR, UG, JG> AuthService for AuthServiceGrpcAdapter<AR, UG, JG>
-where
-    AR: AuthRepository + Send + Sync + 'static,
-    UG: UuidGenerator + Send + Sync + 'static,
-    JG: JwtGenerator + Send + Sync + 'static,
-{
-    async fn login(
-        &self,
-        request: Request<LoginRequest>,
-    ) -> Result<Response<LoginReply>, Status> {
-        // application層に処理を委譲し、.into()で型変換
-        match self.auth_service.login(request.into_inner().into()).await {
-            Ok(login_dto) => Ok(Response::new(login_dto.into())),
-            Err(auth_error) => Err(auth_error.into()),
         }
     }
 }

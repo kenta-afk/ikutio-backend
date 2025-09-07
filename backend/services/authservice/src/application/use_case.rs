@@ -69,53 +69,15 @@ where
     }
 }
 
-impl From<LoginRequest> for LoginCommand {
-    fn from(request: LoginRequest) -> Self {
-        LoginCommand {
-            email: request.email,
-            password: request.password,
-        }
-    }
-}
-
-impl From<LoginDto> for LoginReply {
-    fn from(dto: LoginDto) -> Self {
-        LoginReply {
-            jwt: dto.token,
-            refresh_token: dto.refresh_token,
-            id: dto.id.to_string(),
-        }
-    }
-}
-
-impl From<AuthError> for Status {
-    fn from(error: AuthError) -> Self {
-        match error {
-            AuthError::InvalidPassword => {
-                Status::unauthenticated("Invalid password")
-            },
-            AuthError::FailedHashError => {
-                Status::internal("Internal server error")
-            },
-            AuthError::UserNotFound => {
-                Status::not_found("User not found")
-            },
-        }
-    }
-}
-
 #[tonic::async_trait]
 impl<AR, UG, JG> AuthService for AuthServiceImpl<AR, UG, JG>
 where
-    AR: AuthRepository + Send + Sync + 'static,
-    UG: UuidGenerator + Send + Sync + 'static,
-    JG: JwtGenerator + Send + Sync + 'static,
+    AR: AuthRepository,
+    UG: UuidGenerator,
+    JG: JwtGenerator,
 {
-    async fn login(
-        &self,
-        request: Request<LoginRequest>,
+    async fn login(&self, request: Request<LoginRequest>,
     ) -> Result<Response<LoginReply>, Status> {
-        // .into()で型変換してからuse caseのloginメソッドを呼び出し
         match AuthServiceImpl::login(self, request.into_inner().into()).await {
             Ok(login_dto) => Ok(Response::new(login_dto.into())),
             Err(auth_error) => Err(auth_error.into()),
