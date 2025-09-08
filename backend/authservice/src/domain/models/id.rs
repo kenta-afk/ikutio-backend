@@ -3,7 +3,8 @@ use uuid::Uuid;
 
 use crate::infrastructure::uuid_generator::UuidGenerator;
 
-#[derive(Serialize, Clone, Copy)]
+#[derive(Serialize, Clone, Copy, sqlx::Type)]
+#[sqlx(transparent)]
 pub struct UserId(Uuid);
 
 impl UserId {

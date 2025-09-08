@@ -7,7 +7,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - backend/db/mysql/mysql-data:/var/lib/mysql
+      - ./backend/db/mysql/mysql-data:/var/lib/mysql
 
   postgresql:
     image: postgres:17-alpine3.22
@@ -17,7 +17,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - backend/db/postgresql/postgresql-data:/var/lib/postgresql/data
+      - ./backend/db/postgresql/postgresql-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 30s
@@ -31,7 +31,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - backend/db/dynamodb/dynamodb-data:/home/dynamodblocal/data
+      - ./backend/db/dynamodb/dynamodb-data:/home/dynamodblocal/data
     command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000 || exit 1"]
@@ -46,7 +46,7 @@ services:
     ports:
       - "8001:8001"
     env_file:
-      - .env
+      - backend/db/dynamodb/dev/.env
     depends_on:
       - dynamodb-local
     healthcheck:
@@ -58,27 +58,39 @@ services:
   
   migration:
     container_name: migration
-    build: backend/db/postgresql/migrations
+    build: 
+      context: backend/db/postgresql
+      dockerfile: Dockerfile
     env_file:
       - backend/db/postgresql/dev/.env
     volumes:
-      - backend/db/postgresql/migrations:/app
+      - ./backend/db/postgresql/migrations:/migrations
+    working_dir: /migrations
     command: sqlx migrate run
+    depends_on:
+      postgresql:
+        condition: service_healthy
 
   authservice:
     container_name: authservice
     build: 
-      context: backend/services/authservice
-      dockerfile: backend/services/authservice/dev/Dockerfile
+      context: backend/authservice
+      dockerfile: dev/Dockerfile
     ports:
       - "50053:50053"
     volumes:
-      - backend/services/authservice:/app
+      - ./backend/authservice:/app
       - rust-cargo-registry:/usr/local/cargo/registry
       - rust-cargo-git:/usr/local/cargo/git
       - rust-target:/usr/local/cargo/target
     env_file:
-      - backend/services/authservice/dev/.env
+      - backend/authservice/dev/.env
     depends_on:
       postgresql:
         condition: service_healthy
+
+volumes:
+  rust-cargo-registry:
+  rust-cargo-git:
+  rust-target:
+
