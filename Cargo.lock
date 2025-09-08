@@ -91,6 +91,7 @@ dependencies = [
  "prost",
  "serde",
  "sqlx",
+ "thiserror",
  "tokio",
  "tokio-stream",
  "tonic",

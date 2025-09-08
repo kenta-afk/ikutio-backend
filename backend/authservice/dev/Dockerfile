@@ -11,3 +11,5 @@ RUN cargo install cargo-watch
 COPY . .
 
 EXPOSE 50053
+
+CMD ["cargo", "watch", "-x", "run"]

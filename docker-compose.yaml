@@ -19,7 +19,7 @@ services:
     volumes:
       - ./backend/db/postgresql/postgresql-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U app_user -d app"]
       interval: 30s
       timeout: 5s
       start_period: 10s
@@ -66,7 +66,7 @@ services:
     volumes:
       - ./backend/db/postgresql/migrations:/migrations
     working_dir: /migrations
-    command: sqlx migrate run
+    command: sqlx migrate run --source /migrations
     depends_on:
       postgresql:
         condition: service_healthy

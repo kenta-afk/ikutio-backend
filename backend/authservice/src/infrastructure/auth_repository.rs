@@ -3,7 +3,8 @@ use sqlx::PgPool;
 
 use crate::domain::auth_repository::AuthRepository;
 use crate::domain::models::auth::AuthenticatedUser;
-use crate::domain::models::error::AuthError;
+use crate::domain::models::id::UserId;
+use crate::infrastructure::error::DbError;
 
 pub struct AuthRepositoryImpl {
     pool: PgPool,
@@ -14,24 +15,28 @@ impl AuthRepository for AuthRepositoryImpl {
     fn new(pool: PgPool) -> Self {
         Self { pool }
     }
-    async fn save(&self, user: &AuthenticatedUser) -> Result<(), AuthError> {
-        sqlx::query_as!(
-            AuthenticatedUser,
+    async fn save(&self, user: &AuthenticatedUser) -> Result<(), DbError> {
+        sqlx::query!(
             "INSERT INTO users (id, email, password) VALUES ($1, $2, $3)",
-            user.id,
+            user.id as _,
             user.email,
             user.password
         )
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
     }
     async fn find_by_email(&self, email: &str) -> Option<AuthenticatedUser> {
         let authenticated_user = sqlx::query_as!(
             AuthenticatedUser,
-            "SELECT id, email, password FROM users WHERE email = $1",
+            "SELECT id as \"id: UserId\", email, password FROM users WHERE email = $1",
             email
         )
+        .fetch_one(&self.pool)
         .await
         .ok();
 
-        Some(authenticated_user)
+        authenticated_user
     }
 }

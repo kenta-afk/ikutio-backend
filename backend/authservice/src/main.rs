@@ -60,7 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing::info!("AuthService has started successfully.");
 
-    handler.await?;
+    let _ = handler.await?;
 
     Ok(())
 }
