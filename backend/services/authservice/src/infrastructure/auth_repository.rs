@@ -1,9 +1,11 @@
 use async_trait::async_trait;
 use sqlx::PgPool;
 
-use crate::domain::{auth_repository::AuthRepository, models::{auth::AuthenticatedUser, error::AuthError}};
+use crate::domain::auth_repository::AuthRepository;
+use crate::domain::models::auth::AuthenticatedUser;
+use crate::domain::models::error::AuthError;
 
-pub struct AuthRepositoryImpl{
+pub struct AuthRepositoryImpl {
     pool: PgPool,
 }
 

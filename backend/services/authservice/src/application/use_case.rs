@@ -1,19 +1,20 @@
+use tonic::{Request, Response, Status};
+
+use crate::application::commands::login_command::LoginCommand;
+use crate::application::dtos::login_dto::LoginDto;
+use crate::domain::auth_repository::AuthRepository;
 use crate::domain::models::auth::AuthenticatedUser;
 use crate::domain::models::error::AuthError;
 use crate::infrastructure::jwt_generator::JwtGenerator;
-use crate::{domain::auth_repository::AuthRepository, infrastructure::uuid_generator::UuidGenerator};
-use crate::application::commands::login_command::LoginCommand;
-use crate::application::dtos::login_dto::LoginDto;
+use crate::infrastructure::uuid_generator::UuidGenerator;
 use crate::proto::auth_service_server::AuthService;
-use crate::proto::{LoginRequest, LoginReply};
-use tonic::{Request, Response, Status};
+use crate::proto::{LoginReply, LoginRequest};
 
 pub struct AuthServiceImpl<AR, UG, JG>
-where 
+where
     AR: AuthRepository,
     UG: UuidGenerator,
-    JG: JwtGenerator,
-{
+    JG: JwtGenerator, {
     auth_repository: AR,
     uuid_generator: UG,
     jwt_generator: JG,
@@ -29,43 +30,32 @@ where
         AuthServiceImpl { auth_repository, uuid_generator, jwt_generator }
     }
 
-    pub async fn login(&self, login_command: LoginCommand) -> Result<LoginDto, AuthError> {  
-        let email = login_command.email;  
-        let password = login_command.password;  
-    
-        let user = match self.auth_repository.find_by_email(&email).await {  
-            Some(existing_user) => {  
-                if !existing_user.verify_password(password, &existing_user.password) {  
-                    return Err(AuthError::InvalidPassword);  
-                }  
-                existing_user  
-            },  
-            None => {   
-                let new_user = AuthenticatedUser::new(  
-                    email,  
-                    password,  
-                    &self.uuid_generator,  
-                );  
+    pub async fn login(&self, login_command: LoginCommand) -> Result<LoginDto, AuthError> {
+        let email = login_command.email;
+        let password = login_command.password;
+
+        let user = match self.auth_repository.find_by_email(&email).await {
+            Some(existing_user) => {
+                if !existing_user.verify_password(password, &existing_user.password) {
+                    return Err(AuthError::InvalidPassword);
+                }
+                existing_user
+            }
+            None => {
+                let new_user = AuthenticatedUser::new(email, password, &self.uuid_generator);
 
                 let hashed_password = new_user.hash_password(&new_user.password)?;
 
-                let new_user = AuthenticatedUser {  
-                    password: hashed_password,  
-                    ..new_user  
-                };
-                self.auth_repository.save(&new_user).await?;  
-                new_user  
-            }  
-        };  
-    
-        let jwt = self.jwt_generator.new_jwt(user.id);  
-        let refresh_token = self.jwt_generator.new_refresh_token(user.id);  
-    
-        Ok(LoginDto {  
-            token: jwt,  
-            refresh_token,  
-            id: user.id,  
-        })  
+                let new_user = AuthenticatedUser { password: hashed_password, ..new_user };
+                self.auth_repository.save(&new_user).await?;
+                new_user
+            }
+        };
+
+        let jwt = self.jwt_generator.new_jwt(user.id);
+        let refresh_token = self.jwt_generator.new_refresh_token(user.id);
+
+        Ok(LoginDto { token: jwt, refresh_token, id: user.id })
     }
 }
 
@@ -76,8 +66,7 @@ where
     UG: UuidGenerator,
     JG: JwtGenerator,
 {
-    async fn login(&self, request: Request<LoginRequest>,
-    ) -> Result<Response<LoginReply>, Status> {
+    async fn login(&self, request: Request<LoginRequest>) -> Result<Response<LoginReply>, Status> {
         match AuthServiceImpl::login(self, request.into_inner().into()).await {
             Ok(login_dto) => Ok(Response::new(login_dto.into())),
             Err(auth_error) => Err(auth_error.into()),

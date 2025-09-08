@@ -4,20 +4,24 @@ mod infrastructure;
 mod proto;
 
 use std::env;
+
 use tokio::net::TcpListener;
 use tokio_stream::wrappers::TcpListenerStream;
 use tonic::transport::Server;
 use tracing::Level;
+
+use crate::application::use_case::AuthServiceImpl;
 use crate::domain::auth_repository::AuthRepository;
-use crate::infrastructure::jwt_generator::JwtGeneratorImpl;
-use crate::{application::use_case::AuthServiceImpl, infrastructure::{auth_repository::AuthRepositoryImpl, jwt_generator::JwtGenerator, uuid_generator::UuidGeneratorImpl}};
+use crate::infrastructure::auth_repository::AuthRepositoryImpl;
+use crate::infrastructure::jwt_generator::{JwtGenerator, JwtGeneratorImpl};
+use crate::infrastructure::uuid_generator::UuidGeneratorImpl;
 use crate::proto::auth_service_server::AuthServiceServer;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv::from_path("dev/.env").expect("Failed to load .env file");
 
-    let log_level = match env::var("LOG_LEVEL").as_deref(){
+    let log_level = match env::var("LOG_LEVEL").as_deref() {
         Ok("INFO") => Level::INFO,
         Ok("DEBUG") => Level::DEBUG,
         Ok("ERROR") => Level::ERROR,

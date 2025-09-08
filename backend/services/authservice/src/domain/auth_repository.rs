@@ -1,7 +1,8 @@
 use async_trait::async_trait;
 use sqlx::PgPool;
 
-use crate::domain::models::{auth::AuthenticatedUser, error::AuthError};
+use crate::domain::models::auth::AuthenticatedUser;
+use crate::domain::models::error::AuthError;
 
 #[async_trait]
 pub trait AuthRepository: Send + Sync + 'static {
