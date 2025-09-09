@@ -88,6 +88,20 @@ services:
     depends_on:
       postgresql:
         condition: service_healthy
+  bff:
+    container_name: bff
+    build:
+      context: backend/bff
+      dockerfile: dev/Dockerfile
+    ports:
+      - "50052:50052"
+    volumes:
+      - ./backend/bff:/app
+      - rust-cargo-registry:/usr/local/cargo/registry
+      - rust-cargo-git:/usr/local/cargo/git
+      - rust-target:/usr/local/cargo/target
+    env_file:
+      - backend/bff/dev/.env
 
 volumes:
   rust-cargo-registry:
