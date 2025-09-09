@@ -36,15 +36,13 @@ impl JwtGenerator for JwtGeneratorImpl {
         let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as usize;
         let claims = Claims { sub: id, exp: now + 15 * 60 };
 
-        let token = encode(&Header::default(), &claims, &self.encoding_key).unwrap();
-        token
+        encode(&Header::default(), &claims, &self.encoding_key).unwrap()
     }
 
     fn new_refresh_token(&self, id: UserId) -> String {
         let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as usize;
         let claims = RefreshClaims { sub: id, exp: now + 30 * 24 * 60 * 60 };
 
-        let token = encode(&Header::default(), &claims, &self.encoding_key).unwrap();
-        token
+        encode(&Header::default(), &claims, &self.encoding_key).unwrap()
     }
 }

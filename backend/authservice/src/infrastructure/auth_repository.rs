@@ -28,15 +28,13 @@ impl AuthRepository for AuthRepositoryImpl {
         Ok(())
     }
     async fn find_by_email(&self, email: &str) -> Option<AuthenticatedUser> {
-        let authenticated_user = sqlx::query_as!(
+        sqlx::query_as!(
             AuthenticatedUser,
             "SELECT id as \"id: UserId\", email, password FROM users WHERE email = $1",
             email
         )
         .fetch_one(&self.pool)
         .await
-        .ok();
-
-        authenticated_user
+        .ok()
     }
 }

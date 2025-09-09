@@ -209,6 +209,7 @@ dependencies = [
  "axum",
  "dotenv",
  "prost",
+ "serde",
  "tokio",
  "tonic",
  "tonic-build",

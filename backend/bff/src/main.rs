@@ -1,10 +1,11 @@
-mod services;
 mod routes;
+mod services;
+
+use std::env;
 
 use services::auth_service_client::AuthServiceClient;
-use std::env;
-use tracing::Level;
 use tokio::net::TcpListener;
+use tracing::Level;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -28,14 +29,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let host = env::var("BFF").expect("BFF must be set");
     let auth_service = env::var("AUTHSERVICE").expect("AUTHSERVICE must be set");
 
-    let authservice_client = loop {
+    let auth_client = loop {
         match AuthServiceClient::connect(format!("http://{auth_service}")).await {
             Ok(client) => {
                 tracing::info!("Connected to AuthService at {}", auth_service);
                 break client;
             }
             Err(e) => {
-                tracing::error!("Failed to connect to AuthService: {}. Retrying in 5 seconds...", e);
+                tracing::error!(
+                    "Failed to connect to AuthService: {}. Retrying in 5 seconds...",
+                    e
+                );
 
                 tracing::info!("Retrying connection to AuthService...");
                 tokio::time::sleep(std::time::Duration::from_secs(5)).await;
@@ -43,7 +47,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    let router = routes::router::create_routes(authservice_client);
+    let router = routes::router::create_routes(auth_client);
 
     let listener = TcpListener::bind(host).await?;
 
@@ -51,6 +55,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     axum::serve(listener, router).await?;
     Ok(())
-
-
 }

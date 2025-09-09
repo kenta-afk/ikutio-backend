@@ -22,10 +22,6 @@ impl AuthenticatedUser {
         Ok(hashed_password)
     }
     pub fn verify_password(&self, password: String, hashed_password: &String) -> bool {
-        let result = match verify(password, &hashed_password) {
-            Ok(result) => result,
-            Err(_) => return false,
-        };
-        result
+        verify(password, hashed_password).unwrap_or_default()
     }
 }
