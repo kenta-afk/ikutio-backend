@@ -16,7 +16,6 @@ where
         CorsLayer::new()
             .allow_origin(HeaderValue::from_static("*"))
             .allow_methods([Method::POST])
-            .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION])
-            .allow_credentials(true),
+            .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION]),
     )
 }
