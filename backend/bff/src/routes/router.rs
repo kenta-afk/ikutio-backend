@@ -4,6 +4,7 @@ use axum::routing::post;
 use tower_http::cors::CorsLayer;
 
 use crate::routes::restapi::auth::login::login;
+use crate::routes::restapi::auth::refresh_login::refresh_login;
 use crate::routes::state::AppState;
 use crate::services::authserviceclient::AuthServiceClientTrait;
 
@@ -12,10 +13,14 @@ where
     ASC: AuthServiceClientTrait, {
     let state = AppState { asc };
 
-    Router::new().route("/login", post(login)).with_state(state).layer(
-        CorsLayer::new()
-            .allow_origin(HeaderValue::from_static("*"))
-            .allow_methods([Method::POST])
-            .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION]),
-    )
+    Router::new()
+        .route("/login", post(login))
+        .route("/refresh_login", post(refresh_login))
+        .with_state(state)
+        .layer(
+            CorsLayer::new()
+                .allow_origin(HeaderValue::from_static("*"))
+                .allow_methods([Method::POST])
+                .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION]),
+        )
 }

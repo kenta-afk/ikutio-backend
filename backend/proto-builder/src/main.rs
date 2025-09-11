@@ -2,7 +2,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Generating proto code...");
 
     // パスを定義
-    let services_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../services");
+    let backend_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/..");
     let bff_services_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../bff/src/services");
 
     // 各サービスの設定 (service_name, proto_file_name)
@@ -20,8 +20,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             // クライアント用コード生成（BFF向け）
             s.spawn(move || {
-                let proto_file = format!("{services_dir}/{service_name}/proto/{proto_name}.proto");
-                let include_path = format!("{services_dir}/{service_name}/proto");
+                let proto_file = format!("{backend_dir}/{service_name}/proto/{proto_name}.proto");
+                let include_path = format!("{backend_dir}/{service_name}/proto");
                 let output_path = std::path::PathBuf::from(bff_services_dir);
 
                 std::fs::create_dir_all(&output_path).unwrap();
@@ -41,10 +41,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             // サーバー用コード生成（各マイクロサービス向け）
             s.spawn(move || {
-                let proto_file = format!("{services_dir}/{service_name}/proto/{proto_name}.proto");
-                let include_path = format!("{services_dir}/{service_name}/proto");
+                let proto_file = format!("{backend_dir}/{service_name}/proto/{proto_name}.proto");
+                let include_path = format!("{backend_dir}/{service_name}/proto");
                 let output_path =
-                    std::path::PathBuf::from(format!("{services_dir}/{service_name}/src/proto"));
+                    std::path::PathBuf::from(format!("{backend_dir}/{service_name}/src/proto"));
 
                 std::fs::create_dir_all(&output_path).unwrap();
 

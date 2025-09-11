@@ -1,9 +1,9 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::infrastructure::uuid_generator::UuidGenerator;
 
-#[derive(Serialize, Clone, Copy, sqlx::Type)]
+#[derive(Serialize, Clone, Copy, sqlx::Type, Deserialize)]
 #[sqlx(transparent)]
 pub struct UserId(Uuid);
 

@@ -1,14 +1,16 @@
 use tonic::{Request, Response, Status};
 
 use crate::application::commands::login_command::LoginCommand;
+use crate::application::commands::refresh_login_command::RefreshLoginCommand;
 use crate::application::dtos::login_dto::LoginDto;
+use crate::application::dtos::refresh_login_dto::RefreshLoginDto;
 use crate::domain::auth_repository::AuthRepository;
 use crate::domain::models::auth::AuthenticatedUser;
 use crate::domain::models::error::AuthError;
 use crate::infrastructure::jwt_generator::JwtGenerator;
 use crate::infrastructure::uuid_generator::UuidGenerator;
 use crate::proto::auth_service_server::AuthService;
-use crate::proto::{LoginReply, LoginRequest};
+use crate::proto::{LoginReply, LoginRequest, RefreshLoginReply, RefreshLoginRequest};
 
 pub struct AuthServiceImpl<AR, UG, JG>
 where
@@ -57,6 +59,23 @@ where
 
         Ok(LoginDto { token: jwt, refresh_token, id: user.id })
     }
+
+    pub async fn refresh_login(
+        &self,
+        refreshlogin_command: RefreshLoginCommand,
+    ) -> Result<RefreshLoginDto, AuthError> {
+        let refresh_token = refreshlogin_command.refresh_token;
+
+        let user_id = match self.jwt_generator.verify_refresh_token(&refresh_token) {
+            Some(id) => id,
+            None => return Err(AuthError::InvalidPassword),
+        };
+
+        let new_jwt = self.jwt_generator.new_jwt(user_id);
+        let new_refresh_token = self.jwt_generator.new_refresh_token(user_id);
+
+        Ok(RefreshLoginDto { jwt: new_jwt, refresh_token: new_refresh_token })
+    }
 }
 
 #[tonic::async_trait]
@@ -69,6 +88,16 @@ where
     async fn login(&self, request: Request<LoginRequest>) -> Result<Response<LoginReply>, Status> {
         match AuthServiceImpl::login(self, request.into_inner().into()).await {
             Ok(login_dto) => Ok(Response::new(login_dto.into())),
+            Err(auth_error) => Err(auth_error.into()),
+        }
+    }
+
+    async fn refresh_login(
+        &self,
+        request: Request<RefreshLoginRequest>,
+    ) -> Result<Response<RefreshLoginReply>, Status> {
+        match AuthServiceImpl::refresh_login(self, request.into_inner().into()).await {
+            Ok(refreshlogin_dto) => Ok(Response::new(refreshlogin_dto.into())),
             Err(auth_error) => Err(auth_error.into()),
         }
     }

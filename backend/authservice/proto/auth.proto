@@ -3,6 +3,7 @@ package authservice;
 
 service AuthService {
     rpc Login (LoginRequest) returns (LoginReply);
+    rpc RefreshLogin(RefreshLoginRequest) returns (RefreshLoginReply);
 }
 
 message LoginRequest {
@@ -14,4 +15,13 @@ message LoginReply {
     string jwt = 1;
     string refresh_token = 2;
     string id = 3;
+}
+
+message RefreshLoginRequest {
+    string refreshtoken = 1;
+}
+
+message RefreshLoginReply {
+    string jwt = 1;
+    string refreshtoken = 2;
 }

@@ -3,26 +3,38 @@ use std::sync::Arc;
 use tonic::Status;
 
 use crate::application::commands::login_command::LoginCommand;
+use crate::application::commands::refresh_login_command::RefreshLoginCommand;
 use crate::application::dtos::login_dto::LoginDto;
+use crate::application::dtos::refresh_login_dto::RefreshLoginDto;
 use crate::application::use_case::AuthServiceImpl;
 use crate::domain::auth_repository::AuthRepository;
 use crate::domain::models::error::AuthError;
 use crate::infrastructure::error::DbError;
 use crate::infrastructure::jwt_generator::JwtGenerator;
 use crate::infrastructure::uuid_generator::UuidGenerator;
-use crate::proto::{LoginReply, LoginRequest};
+use crate::proto::{LoginReply, LoginRequest, RefreshLoginReply, RefreshLoginRequest};
 
-// LoginRequestからLoginCommandへの変換
 impl From<LoginRequest> for LoginCommand {
     fn from(request: LoginRequest) -> Self {
         LoginCommand { email: request.email, password: request.password }
     }
 }
 
-// LoginDtoからLoginReplyへの変換
 impl From<LoginDto> for LoginReply {
     fn from(dto: LoginDto) -> Self {
         LoginReply { jwt: dto.token, refresh_token: dto.refresh_token, id: dto.id.to_string() }
+    }
+}
+
+impl From<RefreshLoginRequest> for RefreshLoginCommand {
+    fn from(request: RefreshLoginRequest) -> Self {
+        RefreshLoginCommand { refresh_token: request.refreshtoken }
+    }
+}
+
+impl From<RefreshLoginDto> for RefreshLoginReply {
+    fn from(dto: RefreshLoginDto) -> Self {
+        RefreshLoginReply { jwt: dto.jwt, refreshtoken: dto.refresh_token }
     }
 }
 
@@ -70,7 +82,6 @@ impl From<DbError> for AuthError {
     }
 }
 
-/// gRPCサービスの実装。delegation patternを使用してapplication層のuse caseに処理を委譲
 pub struct AuthServiceGrpcAdapter<AR, UG, JG>
 where
     AR: AuthRepository + Send + Sync + 'static,

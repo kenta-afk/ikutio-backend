@@ -15,6 +15,18 @@ pub struct LoginReply {
     #[prost(string, tag = "3")]
     pub id: ::prost::alloc::string::String,
 }
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct RefreshLoginRequest {
+    #[prost(string, tag = "1")]
+    pub refreshtoken: ::prost::alloc::string::String,
+}
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct RefreshLoginReply {
+    #[prost(string, tag = "1")]
+    pub jwt: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub refreshtoken: ::prost::alloc::string::String,
+}
 /// Generated server implementations.
 pub mod auth_service_server {
     #![allow(
@@ -32,6 +44,13 @@ pub mod auth_service_server {
             &self,
             request: tonic::Request<super::LoginRequest>,
         ) -> std::result::Result<tonic::Response<super::LoginReply>, tonic::Status>;
+        async fn refresh_login(
+            &self,
+            request: tonic::Request<super::RefreshLoginRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::RefreshLoginReply>,
+            tonic::Status,
+        >;
     }
     #[derive(Debug)]
     pub struct AuthServiceServer<T> {
@@ -137,6 +156,51 @@ pub mod auth_service_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let method = LoginSvc(inner);
+                        let codec = tonic_prost::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/authservice.AuthService/RefreshLogin" => {
+                    #[allow(non_camel_case_types)]
+                    struct RefreshLoginSvc<T: AuthService>(pub Arc<T>);
+                    impl<
+                        T: AuthService,
+                    > tonic::server::UnaryService<super::RefreshLoginRequest>
+                    for RefreshLoginSvc<T> {
+                        type Response = super::RefreshLoginReply;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::RefreshLoginRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as AuthService>::refresh_login(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = RefreshLoginSvc(inner);
                         let codec = tonic_prost::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(
