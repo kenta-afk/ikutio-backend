@@ -10,19 +10,26 @@
 ikutio-backend/
 ├── backend/
 │   ├── bff/                    # Backend for Frontend (Rust + Axum)
-│   ├── services/               # マイクロサービス群
-│   │   ├── authservice/        # 認証サービス (Rust)
-│   │   ├── gameservice/        # ゲームロジックサービス
-│   │   └── profileservice/     # プロフィール管理サービス
-│   └── proto-builder/          # Protocol Buffers コード生成ツール
+│   ├── authservice/            # 認証サービス (Rust + tonic)
+│   ├── gameservice/            # ゲームロジックサービス (Rust)
+│   ├── profileservice/         # プロフィール管理サービス (Go + grpc-go)
+│   ├── proto-builder/          # Protocol Buffers コード生成ツール
+│   └── db/                     # データベース設定
+│       ├── mysql/              # MySQL設定・マイグレーション
+│       ├── postgresql/         # PostgreSQL設定・マイグレーション
+│       └── dynamodb/           # DynamoDB設定
 └── README.md
 ```
 
 ## 技術スタック
 
-- **BFF**: Rust + Axum (確定)
-- **マイクロサービス**: 言語自由（Rust、Go、Python、Node.js など）
+- **BFF**: Rust + Axum (REST API提供)
+- **認証サービス**: Rust + tonic + PostgreSQL
+- **ゲームサービス**: Rust + tonic
+- **プロフィールサービス**: Go + grpc-go + PostgreSQL（予定）
 - **通信プロトコル**: gRPC (Protocol Buffers)
+- **データベース**: PostgreSQL, MySQL, DynamoDB
+- **コンテナ化**: Docker + Docker Compose
 - **コード生成**: tonic-prost-build
 
 ## セットアップ
@@ -30,6 +37,8 @@ ikutio-backend/
 ### 前提条件
 
 - Rust (最新版)
+- Go 1.21+ (profileservice開発時)
+- Docker & Docker Compose
 - Protocol Buffers コンパイラ
   ```bash
   # macOS
@@ -47,20 +56,26 @@ ikutio-backend/
    cd ikutio-backend
    ```
 
-2. Protocol Buffersコードを生成
+2. Docker環境での開発（推奨）
    ```bash
-   cd backend/proto-builder
-   cargo run
+   # 全サービスを起動
+   docker-compose up -d
+   
+   # 特定のサービスのみ起動
+   docker-compose up -d postgresql mysql authservice bff
    ```
 
-3. 各サービスをビルド
+3. ローカル開発の場合
    ```bash
-   # BFFをビルド
+   # Protocol Buffersコードを生成
+   cd backend/proto-builder
+   cargo run
+   
+   # 各サービスをビルド
    cd ../bff
    cargo build
    
-   # authserviceをビルド
-   cd ../services/authservice
+   cd ../authservice
    cargo build
    ```
 
@@ -68,12 +83,12 @@ ikutio-backend/
 
 `proto-builder`は各サービスのProtocol Buffersファイルから、適切なクライアント・サーバーコードを自動生成します：
 
-- **BFF用**: クライアントコードのみ生成 (`bff/src/services/`)
-- **各サービス用**: サーバーコードのみ生成 (`services/{service}/proto/`)
+- **BFF用**: クライアントコードのみ生成 (`bff/src/proto/`)
+- **各サービス用**: サーバーコードのみ生成 (`{service}/src/proto/`)
 
 ### 新しいサービスの追加
 
-1. `services/` ディレクトリに新しいサービスディレクトリを作成
+1. `backend/` ディレクトリに新しいサービスディレクトリを作成
 2. `proto/` ディレクトリに `.proto` ファイルを配置
 3. `proto-builder/src/main.rs` の `services` 配列に追加
 4. `cargo run` でコード生成
@@ -82,32 +97,91 @@ ikutio-backend/
 ```rust
 let services = vec![
     ("authservice", "auth"),
-    ("gameservice", "game"),     // 新規追加
-    ("profileservice", "profile"), // 新規追加
+    ("gameservice", "game"),
+    ("profileservice", "profile"),
 ];
 ```
 
 ## 開発
 
+### サービス構成
+
+#### BFF (Backend for Frontend)
+- **技術**: Rust + Axum
+- **役割**: REST APIエンドポイントの提供、マイクロサービスへのルーティング
+- **ポート**: 50052
+
+#### 認証サービス (authservice)
+- **技術**: Rust + tonic + PostgreSQL
+- **役割**: ユーザー認証、JWT発行・検証
+- **ポート**: 50053
+
+#### プロフィールサービス (profileservice)
+- **技術**: Go + grpc-go + PostgreSQL
+- **役割**: ユーザープロフィール管理
+- **ポート**: 50054（予定）
+
+#### ゲームサービス (gameservice)
+- **技術**: Rust + tonic
+- **役割**: ゲームロジック処理
+- **ポート**: 未定
+
 ### BFF開発
 
-BFFは確定でRust + Axumを使用します。各マイクロサービスへのgRPCクライアントとして動作し、REST APIやGraphQLエンドポイントを提供します。
+BFFはRust + Axumを使用し、各マイクロサービスへのgRPCクライアントとして動作します。REST APIやGraphQLエンドポイントを提供します。
 
 ### マイクロサービス開発
 
-各マイクロサービスは言語を自由に選択できます：
+各マイクロサービスは異なる言語で実装可能です：
 
 - **Rust**: tonicを使用
 - **Go**: grpc-goを使用  
 - **Python**: grpcio-toolsを使用
 - **Node.js**: @grpc/grpc-jsを使用
 
+## データベース構成
+
+### PostgreSQL
+- **用途**: メインデータベース（ユーザー情報、認証情報）
+- **ポート**: 5432
+- **マイグレーション**: SQLXを使用
+
+### MySQL
+- **用途**: 補助データベース
+- **ポート**: 3306
+
+### DynamoDB Local
+- **用途**: NoSQLデータ（セッション、キャッシュ等）
+- **ポート**: 8000
+- **管理画面**: 8001 (dynamodb-admin)
+
+## 開発環境
+
+### Docker Compose サービス
+- `postgresql` - PostgreSQLデータベース
+- `mysql` - MySQLデータベース
+- `dynamodb-local` - DynamoDB Local
+- `dynamodb-admin` - DynamoDB管理画面
+- `migration` - PostgreSQLマイグレーション
+- `authservice` - 認証サービス
+- `bff` - Backend for Frontend
+
+### 環境変数
+各サービスの設定は以下のファイルで管理：
+- `backend/authservice/dev/.env`
+- `backend/bff/dev/.env`
+- `backend/db/postgresql/dev/.env`
+- `backend/db/mysql/dev/.env`
+- `backend/db/dynamodb/dev/.env`
+
 ## プロジェクト構造の利点
 
-- **言語の自由度**: BFF以外は好きな言語で開発可能
+- **マイクロサービスアーキテクチャ**: サービス単位での独立した開発・デプロイ
+- **言語の多様性**: 各サービスで最適な言語を選択可能（Rust、Go等）
 - **スケーラビリティ**: サービス単位での独立したスケーリング
-- **開発効率**: 自動コード生成により型安全な通信
+- **開発効率**: Protocol Buffersによる型安全な通信
 - **保守性**: 責務の明確な分離
+- **Docker化**: 環境の統一と簡単なセットアップ
 
 ## コントリビューション
 
