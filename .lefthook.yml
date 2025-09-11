@@ -1,0 +1,19 @@
+pre-commit:
+  commands:
+    format-and-clippy-staged:
+      glob: "*.rs"
+      run: |
+        git stash push --keep-index --message "lefthook: format: and clippy staged files"
+
+        cargo +nightly clippy --all-features --fix --allow-staged
+        cargo +nightly fmt
+
+        if ! git diff --quiet; then
+           echo "cargo fmt/fix によりファイルが自動修正されました。" >&2
+           echo "修正内容をステージングして、再コミットしてください。" >&2
+           git stash pop --quiet
+           exit 1
+         fi
+
+         cargo +nightly clippy --all-targets --all-features -- -D warnings
+         git stash pop
