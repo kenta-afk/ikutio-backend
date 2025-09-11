@@ -3,5 +3,6 @@ resolver = "2"
 members = [
     "backend/authservice",
     "backend/gameservice",   
-    "backend/bff"  
+    "backend/bff", 
+    "backend/proto-builder"
 ]

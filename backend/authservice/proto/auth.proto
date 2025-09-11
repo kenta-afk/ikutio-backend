@@ -1,0 +1,27 @@
+syntax = "proto3";
+package authservice;
+
+service AuthService {
+    rpc Login (LoginRequest) returns (LoginReply);
+    rpc RefreshLogin(RefreshLoginRequest) returns (RefreshLoginReply);
+}
+
+message LoginRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message LoginReply {
+    string jwt = 1;
+    string refresh_token = 2;
+    string id = 3;
+}
+
+message RefreshLoginRequest {
+    string refreshtoken = 1;
+}
+
+message RefreshLoginReply {
+    string jwt = 1;
+    string refreshtoken = 2;
+}
