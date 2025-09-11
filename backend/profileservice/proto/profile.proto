@@ -1,0 +1,16 @@
+syntax = "proto3";
+package profileservice;
+
+option go_package = "./build";
+
+service ProfileService {
+    rpc CreateProfile (CreateProfileRequest) returns (CreateProfileReply);
+}
+
+message CreateProfileRequest {
+    string name = 1;
+}
+
+message CreateProfileReply {
+    string name = 1;
+}
