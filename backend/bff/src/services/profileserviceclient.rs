@@ -9,6 +9,7 @@ pub trait ProfileServiceClientTrait: Send + Sync + 'static + Clone {
     async fn create_profile(
         &mut self,
         request: CreateProfileRequest,
+        user_id: String,
     ) -> Result<CreateProfileReply, tonic::Status>;
 }
 
@@ -17,7 +18,11 @@ impl ProfileServiceClientTrait for ProfileServiceClient<Channel> {
     async fn create_profile(
         &mut self,
         request: CreateProfileRequest,
+        user_id: String,
     ) -> Result<CreateProfileReply, tonic::Status> {
+        let mut request = tonic::Request::new(request);
+        request.metadata_mut().insert("user-id", user_id.parse().unwrap());
+
         let response = self.create_profile(request).await?;
         Ok(response.into_inner())
     }

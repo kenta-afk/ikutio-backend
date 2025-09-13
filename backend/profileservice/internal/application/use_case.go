@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/kenta-afk/ikutio-backend/internal/application/commands"
+	"github.com/kenta-afk/ikutio-backend/internal/application/dtos"
 	"github.com/kenta-afk/ikutio-backend/internal/domain"
 	"github.com/kenta-afk/ikutio-backend/internal/domain/models"
 )
@@ -18,12 +19,17 @@ func New(repo domain.ProfileRepository) *ProfileServiceImpl {
 	}
 }
 
-func (s *ProfileServiceImpl) CreateProfile(ctx context.Context, cmd commands.CreateProfileCommand) error {
+func (s *ProfileServiceImpl) CreateProfile(ctx context.Context, cmd commands.CreateProfileCommand) (*dtos.CreateProfileDto, error) {
 	profile := models.New(cmd.Id, cmd.Name)
 	err := s.repo.Save(ctx, profile)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	// DTOを作成して返す
+	responseDto := &dtos.CreateProfileDto{
+		Name: profile.Name,
+	}
+
+	return responseDto, nil
 }
