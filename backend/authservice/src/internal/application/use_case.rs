@@ -1,14 +1,14 @@
 use tonic::{Request, Response, Status};
 
-use crate::application::commands::login_command::LoginCommand;
-use crate::application::commands::refresh_login_command::RefreshLoginCommand;
-use crate::application::dtos::login_dto::LoginDto;
-use crate::application::dtos::refresh_login_dto::RefreshLoginDto;
-use crate::domain::auth_repository::AuthRepository;
-use crate::domain::models::auth::AuthenticatedUser;
-use crate::domain::models::error::AuthError;
-use crate::infrastructure::jwt_generator::JwtGenerator;
-use crate::infrastructure::uuid_generator::UuidGenerator;
+use crate::internal::application::commands::login_command::LoginCommand;
+use crate::internal::application::commands::refresh_login_command::RefreshLoginCommand;
+use crate::internal::application::dtos::login_dto::LoginDto;
+use crate::internal::application::dtos::refresh_login_dto::RefreshLoginDto;
+use crate::internal::domain::auth_repository::AuthRepository;
+use crate::internal::domain::models::auth::Auth;
+use crate::internal::domain::models::error::AuthError;
+use crate::internal::infrastructure::jwt_generator::JwtGenerator;
+use crate::internal::infrastructure::uuid_generator::UuidGenerator;
 use crate::proto::auth_service_server::AuthService;
 use crate::proto::{LoginReply, LoginRequest, RefreshLoginReply, RefreshLoginRequest};
 
@@ -44,11 +44,11 @@ where
                 existing_user
             }
             None => {
-                let new_user = AuthenticatedUser::new(email, password, &self.uuid_generator);
+                let new_user = Auth::new(email, password, &self.uuid_generator);
 
                 let hashed_password = new_user.hash_password(&new_user.password)?;
 
-                let new_user = AuthenticatedUser { password: hashed_password, ..new_user };
+                let new_user = Auth { password: hashed_password, ..new_user };
                 self.auth_repository.save(&new_user).await?;
                 new_user
             }

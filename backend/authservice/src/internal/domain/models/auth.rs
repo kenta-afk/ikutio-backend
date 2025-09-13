@@ -1,18 +1,18 @@
 use bcrypt::{DEFAULT_COST, hash, verify};
 
-use crate::domain::models::error::AuthError;
-use crate::domain::models::id::UserId;
-use crate::infrastructure::uuid_generator::UuidGenerator;
+use crate::internal::domain::models::error::AuthError;
+use crate::internal::domain::models::id::UserId;
+use crate::internal::infrastructure::uuid_generator::UuidGenerator;
 
-pub struct AuthenticatedUser {
+pub struct Auth {
     pub id: UserId,
     pub email: String,
     pub password: String,
 }
 
-impl AuthenticatedUser {
+impl Auth {
     pub fn new(email: String, password: String, generator: &impl UuidGenerator) -> Self {
-        AuthenticatedUser { id: UserId::new(generator), email, password }
+        Auth { id: UserId::new(generator), email, password }
     }
     pub fn hash_password(&self, password: &String) -> Result<String, AuthError> {
         let hashed_password = match hash(password, DEFAULT_COST) {

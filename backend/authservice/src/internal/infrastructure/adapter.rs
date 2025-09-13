@@ -1,4 +1,4 @@
-use crate::infrastructure::error::DbError;
+use crate::internal::infrastructure::error::DbError;
 
 impl From<sqlx::Error> for DbError {
     fn from(err: sqlx::Error) -> Self {

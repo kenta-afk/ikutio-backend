@@ -1,10 +1,10 @@
 use async_trait::async_trait;
 use sqlx::PgPool;
 
-use crate::domain::auth_repository::AuthRepository;
-use crate::domain::models::auth::AuthenticatedUser;
-use crate::domain::models::id::UserId;
-use crate::infrastructure::error::DbError;
+use crate::internal::domain::auth_repository::AuthRepository;
+use crate::internal::domain::models::auth::Auth;
+use crate::internal::domain::models::id::UserId;
+use crate::internal::infrastructure::error::DbError;
 
 pub struct AuthRepositoryImpl {
     pool: PgPool,
@@ -15,7 +15,7 @@ impl AuthRepository for AuthRepositoryImpl {
     fn new(pool: PgPool) -> Self {
         Self { pool }
     }
-    async fn save(&self, user: &AuthenticatedUser) -> Result<(), DbError> {
+    async fn save(&self, user: &Auth) -> Result<(), DbError> {
         sqlx::query!(
             "INSERT INTO users (id, email, password) VALUES ($1, $2, $3)",
             user.id as _,
@@ -27,9 +27,9 @@ impl AuthRepository for AuthRepositoryImpl {
 
         Ok(())
     }
-    async fn find_by_email(&self, email: &str) -> Option<AuthenticatedUser> {
+    async fn find_by_email(&self, email: &str) -> Option<Auth> {
         sqlx::query_as!(
-            AuthenticatedUser,
+            Auth,
             "SELECT id as \"id: UserId\", email, password FROM users WHERE email = $1",
             email
         )
