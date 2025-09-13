@@ -2,16 +2,16 @@ use std::sync::Arc;
 
 use tonic::Status;
 
-use crate::application::commands::login_command::LoginCommand;
-use crate::application::commands::refresh_login_command::RefreshLoginCommand;
-use crate::application::dtos::login_dto::LoginDto;
-use crate::application::dtos::refresh_login_dto::RefreshLoginDto;
-use crate::application::use_case::AuthServiceImpl;
-use crate::domain::auth_repository::AuthRepository;
-use crate::domain::models::error::AuthError;
-use crate::infrastructure::error::DbError;
-use crate::infrastructure::jwt_generator::JwtGenerator;
-use crate::infrastructure::uuid_generator::UuidGenerator;
+use crate::internal::application::commands::login_command::LoginCommand;
+use crate::internal::application::commands::refresh_login_command::RefreshLoginCommand;
+use crate::internal::application::dtos::login_dto::LoginDto;
+use crate::internal::application::dtos::refresh_login_dto::RefreshLoginDto;
+use crate::internal::application::use_case::AuthServiceImpl;
+use crate::internal::domain::auth_repository::AuthRepository;
+use crate::internal::domain::models::error::AuthError;
+use crate::internal::infrastructure::error::DbError;
+use crate::internal::infrastructure::jwt_generator::JwtGenerator;
+use crate::internal::infrastructure::uuid_generator::UuidGenerator;
 use crate::proto::{LoginReply, LoginRequest, RefreshLoginReply, RefreshLoginRequest};
 
 impl From<LoginRequest> for LoginCommand {

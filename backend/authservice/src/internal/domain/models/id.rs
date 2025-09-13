@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::infrastructure::uuid_generator::UuidGenerator;
+use crate::internal::infrastructure::uuid_generator::UuidGenerator;
 
 #[derive(Serialize, Clone, Copy, sqlx::Type, Deserialize)]
 #[sqlx(transparent)]

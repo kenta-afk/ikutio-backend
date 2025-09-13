@@ -8,6 +8,12 @@ services:
       - "3306:3306"
     volumes:
       - ./backend/db/mysql/mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
 
   postgresql:
     image: postgres:17-alpine3.22
@@ -56,8 +62,8 @@ services:
       start_period: 10s
       retries: 3
   
-  migration:
-    container_name: migration
+  postgresql-migration:
+    container_name: postgresql-migration
     build: 
       context: backend/db/postgresql
       dockerfile: Dockerfile
@@ -69,6 +75,16 @@ services:
     command: sqlx migrate run --source /migrations
     depends_on:
       postgresql:
+        condition: service_healthy
+
+  mysql-migration:
+    image: migrate/migrate:latest
+    container_name: mysql-migration
+    volumes:
+      - ./backend/db/mysql/migrations:/migrations
+    command: ["-path", "/migrations", "-database", "mysql://app_user:app_password@tcp(mysql:3306)/app", "up"]
+    depends_on:
+      mysql:
         condition: service_healthy
 
   authservice:
@@ -88,8 +104,28 @@ services:
     depends_on:
       postgresql:
         condition: service_healthy
-      migration:
+      postgresql-migration:
         condition: service_completed_successfully
+
+  profileservice:
+    container_name: profileservice
+    build: 
+      context: backend/profileservice
+      dockerfile: dev/Dockerfile
+    ports:
+      - "50051:50051"
+    volumes:  
+      - ./backend/profileservice:/app  
+      - go-build-cache:/root/.cache/go-build
+      - go-mod-cache:/go/pkg/mod  
+    env_file:
+      - backend/profileservice/dev/.env 
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mysql-migration:
+        condition: service_completed_successfully
+
   bff:
     container_name: bff
     build:
@@ -106,9 +142,12 @@ services:
       - backend/bff/dev/.env
     depends_on:
       - authservice
+      - profileservice
 
 volumes:
   rust-cargo-registry:
   rust-cargo-git:
   rust-target:
+  go-build-cache:
+  go-mod-cache:
 
