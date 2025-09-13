@@ -1,3 +1,28 @@
+use async_trait::async_trait;
+use tonic::transport::Channel;
+
+pub use self::profile_service_client::ProfileServiceClient;
+use crate::services::{CreateProfileReply, CreateProfileRequest};
+
+#[async_trait]
+pub trait ProfileServiceClientTrait: Send + Sync + 'static + Clone {
+    async fn create_profile(
+        &mut self,
+        request: CreateProfileRequest,
+    ) -> Result<CreateProfileReply, tonic::Status>;
+}
+
+#[async_trait]
+impl ProfileServiceClientTrait for ProfileServiceClient<Channel> {
+    async fn create_profile(
+        &mut self,
+        request: CreateProfileRequest,
+    ) -> Result<CreateProfileReply, tonic::Status> {
+        let response = self.create_profile(request).await?;
+        Ok(response.into_inner())
+    }
+}
+
 // @generated
 /// Generated client implementations.
 pub mod profile_service_client {
@@ -6,10 +31,10 @@ pub mod profile_service_client {
         dead_code,
         missing_docs,
         clippy::wildcard_imports,
-        clippy::let_unit_value,
+        clippy::let_unit_value
     )]
-    use tonic::codegen::*;
     use tonic::codegen::http::Uri;
+    use tonic::codegen::*;
     #[derive(Debug, Clone)]
     pub struct ProfileServiceClient<T> {
         inner: tonic::client::Grpc<T>,
@@ -19,15 +44,14 @@ pub mod profile_service_client {
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
             D: TryInto<tonic::transport::Endpoint>,
-            D::Error: Into<StdError>,
-        {
+            D::Error: Into<StdError>, {
             let conn = tonic::transport::Endpoint::new(dst)?.connect().await?;
             Ok(Self::new(conn))
         }
     }
     impl<T> ProfileServiceClient<T>
     where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T: tonic::client::GrpcService<tonic::body::Body>,
         T::Error: Into<StdError>,
         T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
         <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
@@ -48,15 +72,13 @@ pub mod profile_service_client {
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
             T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
-                Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                    http::Request<tonic::body::Body>,
+                    Response = http::Response<
+                        <T as tonic::client::GrpcService<tonic::body::Body>>::ResponseBody,
+                    >,
                 >,
-            >,
-            <T as tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
-            >>::Error: Into<StdError> + std::marker::Send + std::marker::Sync,
-        {
+            <T as tonic::codegen::Service<http::Request<tonic::body::Body>>>::Error:
+                Into<StdError> + std::marker::Send + std::marker::Sync, {
             ProfileServiceClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
@@ -93,27 +115,18 @@ pub mod profile_service_client {
         pub async fn create_profile(
             &mut self,
             request: impl tonic::IntoRequest<super::CreateProfileRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::CreateProfileReply>,
-            tonic::Status,
-        > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::unknown(
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic::codec::ProstCodec::default();
+        ) -> std::result::Result<tonic::Response<super::CreateProfileReply>, tonic::Status>
+        {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::unknown(format!("Service was not ready: {}", e.into()))
+            })?;
+            let codec = tonic_prost::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
                 "/profileservice.ProfileService/CreateProfile",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("profileservice.ProfileService", "CreateProfile"),
-                );
+                .insert(GrpcMethod::new("profileservice.ProfileService", "CreateProfile"));
             self.inner.unary(req, path, codec).await
         }
     }

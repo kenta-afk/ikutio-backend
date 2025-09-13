@@ -45,6 +45,8 @@ all: setup $(PROTO_BUILD_DIR)
 		--tonic_opt=no_include \
 		--tonic_opt=no_server \
 		profile.proto
+	@echo "Renaming tonic client file to follow naming convention..."
+	@mv $(BFF_SERVICES_DIR)/profile.tonic.rs $(BFF_SERVICES_DIR)/profileserviceclient.rs || true
 	@echo "Cleaning up unnecessary files..."
 	@rm -rf $(BFF_SERVICES_DIR)/profile/
 	@echo "Rust protobuf client files built successfully in $(BFF_SERVICES_DIR)"
@@ -70,6 +72,9 @@ clean:
 	rm -rf $(BUILD_DIR)
 	rm -f $(BFF_SERVICES_DIR)/profile.rs
 	rm -f $(BFF_SERVICES_DIR)/profile_grpc.rs
+	rm -f $(BFF_SERVICES_DIR)/profileservice.rs
+	rm -f $(BFF_SERVICES_DIR)/profileserviceclient.rs
+	rm -f $(BFF_SERVICES_DIR)/profile.tonic.rs
 	rm -rf $(BFF_SERVICES_DIR)/profile/
 	$(GO) clean
 	@echo "Clean complete"

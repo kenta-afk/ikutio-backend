@@ -27,11 +27,3 @@ func (s *ProfileServiceImpl) CreateProfile(ctx context.Context, cmd commands.Cre
 
 	return nil
 }
-
-func (s *ProfileServiceImpl) GetProfile(ctx context.Context, cmd commands.GetProfileCommand) (*models.Profile, error) {
-	res, err := s.repo.FindById(ctx, cmd.Id)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
-}
