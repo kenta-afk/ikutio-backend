@@ -7,8 +7,8 @@ use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 use serde::Deserialize;
 
 #[derive(Debug, Clone)]
-struct AuthenticatedUser {
-    user_id: String,
+pub struct AuthenticatedUser {
+    pub user_id: String,
 }
 
 #[derive(Debug, Deserialize)]

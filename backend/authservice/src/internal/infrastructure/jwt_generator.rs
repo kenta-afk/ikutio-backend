@@ -3,7 +3,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
 
-use crate::domain::models::id::UserId;
+use crate::internal::domain::models::id::UserId;
 
 pub trait JwtGenerator: Send + Sync + 'static {
     fn new(secret: &str) -> Self;

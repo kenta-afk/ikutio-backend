@@ -1,6 +1,4 @@
-mod application;
-mod domain;
-mod infrastructure;
+mod internal;
 mod proto;
 
 use std::env;
@@ -10,11 +8,11 @@ use tokio_stream::wrappers::TcpListenerStream;
 use tonic::transport::Server;
 use tracing::Level;
 
-use crate::application::use_case::AuthServiceImpl;
-use crate::domain::auth_repository::AuthRepository;
-use crate::infrastructure::auth_repository::AuthRepositoryImpl;
-use crate::infrastructure::jwt_generator::{JwtGenerator, JwtGeneratorImpl};
-use crate::infrastructure::uuid_generator::UuidGeneratorImpl;
+use crate::internal::application::use_case::AuthServiceImpl;
+use crate::internal::domain::auth_repository::AuthRepository;
+use crate::internal::infrastructure::auth_repository::AuthRepositoryImpl;
+use crate::internal::infrastructure::jwt_generator::{JwtGenerator, JwtGeneratorImpl};
+use crate::internal::infrastructure::uuid_generator::UuidGeneratorImpl;
 use crate::proto::auth_service_server::AuthServiceServer;
 
 #[tokio::main]

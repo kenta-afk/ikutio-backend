@@ -1,4 +1,4 @@
-use crate::domain::models::id::UserId;
+use crate::internal::domain::models::id::UserId;
 
 pub struct LoginDto {
     pub token: String,
