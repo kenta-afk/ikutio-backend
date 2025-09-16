@@ -80,8 +80,15 @@ where
 
                 let mut response = Response::new(Box::pin(mapped_stream)
                     as Pin<Box<dyn Stream<Item = Result<StartGameReply, Status>> + Send>>);
+
+                // Disable all forms of buffering to ensure real-time streaming
                 response.metadata_mut().insert("x-accel-buffering", "no".parse().unwrap());
-                response.metadata_mut().insert("cache-control", "no-cache".parse().unwrap());
+                response.metadata_mut().insert(
+                    "cache-control",
+                    "no-cache, no-store, must-revalidate".parse().unwrap(),
+                );
+                response.metadata_mut().insert("pragma", "no-cache".parse().unwrap());
+                response.metadata_mut().insert("expires", "0".parse().unwrap());
                 response
                     .metadata_mut()
                     .insert("x-content-type-options", "nosniff".parse().unwrap());
