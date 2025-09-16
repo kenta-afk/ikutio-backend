@@ -15,11 +15,19 @@ impl TimeDomainService {
             let mut counter = 1u32;
             let mut interval = interval(TokioDuration::from_secs(1));
 
+            // Set interval to not miss ticks and ensure real-time delivery
+            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+
             while counter <= 160 {
+                // Wait for the tick first, then yield immediately for real-time streaming
                 interval.tick().await;
+
+                tracing::info!("Timer tick: {}", counter);
                 yield counter;
                 counter += 1;
             }
+
+            tracing::info!("Timer stream completed");
         }
     }
 }

@@ -1,8 +1,6 @@
-use axum::body::Body;
-use axum::extract::State;
-use axum::http::Response;
-use futures::StreamExt;
-use tokio_stream::StreamExt as TokioStreamExt;
+use axum::extract::{State, WebSocketUpgrade};
+use axum::response::Response;
+use futures::{SinkExt, StreamExt};
 
 use crate::routes::extractor::AuthenticatedUser;
 use crate::routes::response::{AppError, AppResult};
@@ -11,9 +9,10 @@ use crate::services::StartGameRequest;
 use crate::services::gameserviceclient::GameServiceClientTrait;
 
 pub async fn start_game<GSC>(
+    ws: WebSocketUpgrade,
     authenticated_user: AuthenticatedUser,
     State(GameService(mut gsc)): State<GameService<GSC>>,
-) -> AppResult<Response<Body>>
+) -> AppResult<Response>
 where
     GSC: GameServiceClientTrait, {
     let request = StartGameRequest {};
@@ -23,21 +22,23 @@ where
         .await
         .map_err(AppError::internal_error)?;
 
-    // StreamingをHTTPレスポンスに直接変換
-    let body = Body::from_stream(StreamExt::map(response, |item| {
-        item.map(|reply| {
-            let mut data = serde_json::to_vec(&reply).unwrap();
-            data.push(b'\n');
-            bytes::Bytes::from(data)
-        })
-        .map_err(std::io::Error::other)
-    }));
+    Ok(ws.on_upgrade(move |socket| async move {
+        let (mut sender, _receiver) = socket.split();
 
-    Ok(Response::builder()
-        .header("content-type", "application/x-ndjson")
-        .header("cache-control", "no-cache")
-        .header("connection", "keep-alive")
-        .header("x-accel-buffering", "no")
-        .body(body)
-        .unwrap())
+        let mut stream = response;
+        while let Some(item) = StreamExt::next(&mut stream).await {
+            match item {
+                Ok(reply) => {
+                    let message = serde_json::to_string(&reply).unwrap();
+                    if sender.send(axum::extract::ws::Message::Text(message.into())).await.is_err()
+                    {
+                        break;
+                    }
+                }
+                Err(_) => break,
+            }
+        }
+
+        let _ = sender.close().await;
+    }))
 }

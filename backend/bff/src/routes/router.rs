@@ -1,5 +1,5 @@
 use axum::Router;
-use axum::http::{HeaderValue, Method, header};
+use axum::http::{HeaderName, HeaderValue, Method, header};
 use axum::routing::{get, post};
 use tower_http::cors::CorsLayer;
 
@@ -26,13 +26,20 @@ where
         .route("/login", post(login))
         .route("/refresh_login", post(refresh_login))
         .route("/create_profile", post(create_profile))
-        .route("/start_game", post(start_game))
+        .route("/start_game", get(start_game))
         .route("/get_locations", get(get_locations))
         .with_state(state)
         .layer(
             CorsLayer::new()
                 .allow_origin(HeaderValue::from_static("*"))
-                .allow_methods([Method::POST])
-                .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION]),
+                .allow_methods([Method::POST, Method::GET])
+                .allow_headers([
+                    header::CONTENT_TYPE,
+                    header::AUTHORIZATION,
+                    header::CONNECTION,
+                    header::UPGRADE,
+                    HeaderName::from_static("sec-websocket-key"),
+                    HeaderName::from_static("sec-websocket-version"),
+                ]),
         )
 }
