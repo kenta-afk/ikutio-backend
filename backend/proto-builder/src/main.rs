@@ -6,7 +6,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bff_services_dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../bff/src/services");
 
     // 各サービスの設定 (service_name, proto_file_name)
-    let services = vec![("authservice", "auth"), ("gameservice", "game")];
+    let services =
+        vec![("authservice", "auth"), ("gameservice", "game"), ("locationservice", "location")];
 
     // 並列処理でクライアントとサーバーコードを同時生成
     std::thread::scope(|s| {

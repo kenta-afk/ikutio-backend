@@ -4,5 +4,6 @@ members = [
     "backend/authservice",
     "backend/gameservice",   
     "backend/bff", 
-    "backend/proto-builder"
-    ]
+    "backend/proto-builder", 
+    "backend/bff_mobile", 
+    "backend/locationservice"]

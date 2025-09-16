@@ -66,6 +66,41 @@ services:
       start_period: 5s
       retries: 3
       
+  dynamodb-local2:
+    container_name: dynamodb-local2
+    image: amazon/dynamodb-local:latest
+    ports:
+      - "8003:8003"
+    build:
+      context: ./backend/db/dynamodb2
+      dockerfile: dev/Dockerfile
+    volumes:
+      - ./backend/db/dynamodb2/dynamodb2-data:/home/dynamodblocal/data
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data -port 8003"
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:8003 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 5
+
+  dynamodb-admin2:
+    image: aaronshaf/dynamodb-admin
+    container_name: dynamodb-admin2
+    ports:
+      - "8004:8001"
+    env_file:
+      - ./backend/db/dynamodb2/dev/.env
+    depends_on:
+      dynamodb-local2:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8001"]
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
+      
   redis:
     image: redis:7.2.4-alpine
     container_name: redis
@@ -164,6 +199,44 @@ services:
       dynamodb-local:
         condition: service_healthy
 
+  locationservice:
+    container_name: locationservice
+    build:
+      context: backend/locationservice
+      dockerfile: dev/Dockerfile
+    ports:
+      - "50055:50055"
+    volumes:
+      - ./backend/locationservice:/app
+      - rust-cargo-registry:/usr/local/cargo/registry
+      - rust-cargo-git:/usr/local/cargo/git
+      - rust-target:/usr/local/cargo/target
+    env_file:
+      - backend/locationservice/dev/.env
+    depends_on:
+      dynamodb-local2:
+        condition: service_healthy
+
+  bff_mobile:
+    container_name: bff_mobile
+    build:
+      context: backend/bff_mobile
+      dockerfile: dev/Dockerfile
+    ports:
+      - "50056:50056"
+    volumes:
+      - ./backend/bff_mobile:/app
+      - rust-cargo-registry:/usr/local/cargo/registry
+      - rust-cargo-git:/usr/local/cargo/git
+      - rust-target:/usr/local/cargo/target
+    env_file:
+      - backend/bff_mobile/dev/.env
+    depends_on:
+      authservice:
+        condition: service_started
+      locationservice:
+        condition: service_started
+
   bff:
     container_name: bff
     build:
@@ -184,6 +257,8 @@ services:
       profileservice:
         condition: service_started
       gameservice:
+        condition: service_started
+      locationservice:
         condition: service_started
 
 volumes:
