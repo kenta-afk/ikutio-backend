@@ -6,9 +6,9 @@ pub struct PostLocationRequest {
 }
 #[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message, Serialize, Deserialize)]
 pub struct PostLocationReply {}
-#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message, Serialize, Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message, Serialize, Deserialize, ToSchema)]
 pub struct GetLocationRequest {}
-#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message, Serialize, Deserialize, ToSchema)]
 pub struct GetLocationReply {
     #[prost(string, tag = "1")]
     pub locations: ::prost::alloc::string::String,

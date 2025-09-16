@@ -5,8 +5,16 @@ use futures::{SinkExt, StreamExt};
 use crate::routes::extractor::AuthenticatedUser;
 use crate::routes::response::{AppError, AppResult};
 use crate::routes::state::GameService;
-use crate::services::StartGameRequest;
 use crate::services::gameserviceclient::GameServiceClientTrait;
+use crate::services::{StartGameReply, StartGameRequest};
+
+#[utoipa::path(
+    get,
+    path = "/start_game",
+    responses(
+        (status = 200, description = "Start game successfully", body = StartGameReply),
+    ),
+)]
 
 pub async fn start_game<GSC>(
     ws: WebSocketUpgrade,

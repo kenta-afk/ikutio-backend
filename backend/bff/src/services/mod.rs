@@ -1,3 +1,6 @@
+use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
+
 include!("authservice.rs");
 include!("profileservice.rs");
 include!("gameservice.rs");

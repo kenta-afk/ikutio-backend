@@ -5,6 +5,14 @@ use crate::routes::response::{AppError, AppResult};
 use crate::routes::state::AuthService;
 use crate::services::authserviceclient::AuthServiceClientTrait;
 use crate::services::{LoginReply, LoginRequest};
+
+#[utoipa::path(
+    post,
+    path = "/login",
+    responses(
+        (status = 200, description = "Login successfully", body = LoginReply),
+    ),
+)]
 pub async fn login<ASC>(
     State(AuthService(mut asc)): State<AuthService<ASC>>,
     Json(payload): Json<LoginRequest>,
