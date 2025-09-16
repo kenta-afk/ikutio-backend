@@ -7,6 +7,14 @@ use crate::routes::state::ProfileService;
 use crate::services::profileserviceclient::ProfileServiceClientTrait;
 use crate::services::{CreateProfileReply, CreateProfileRequest};
 
+#[utoipa::path(
+    post,
+    path = "/create_profile",
+    responses(
+        (status = 200, description = "Create profile successfully", body = CreateProfileReply),
+    ),
+)]
+
 pub async fn create_profile<PSC>(
     authenticated_user: AuthenticatedUser,
     State(ProfileService(mut psc)): State<ProfileService<PSC>>,

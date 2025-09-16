@@ -2,6 +2,7 @@ use axum::Json;
 use axum::extract::State;
 use chrono::DateTime;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 use crate::routes::extractor::AuthenticatedUser;
 use crate::routes::response::{AppError, AppResult};
@@ -9,7 +10,7 @@ use crate::routes::state::LocationService;
 use crate::services::locationserviceclient::LocationServiceClientTrait;
 use crate::services::{PostLocationReply, PostLocationRequest};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, ToSchema)]
 pub struct LocationData {
     pub latitude: f64,
     pub longitude: f64,
@@ -23,12 +24,19 @@ pub struct LocationDataInternal {
     pub timestamp: i64,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, ToSchema)]
 pub struct PostLocationPayload {
     #[serde(rename = "pathData")]
     pub path_data: Vec<LocationData>,
 }
 
+#[utoipa::path(
+    post,
+    path = "/post_locations",
+    responses(
+        (status = 200, description = "Post locations successfully", body = PostLocationReply),
+    ),
+)]
 pub async fn post_locations<LSC>(
     authenticated_user: AuthenticatedUser,
     State(LocationService(mut asc)): State<LocationService<LSC>>,

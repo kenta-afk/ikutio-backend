@@ -2,6 +2,8 @@ use axum::Router;
 use axum::http::{HeaderName, HeaderValue, Method, header};
 use axum::routing::{get, post};
 use tower_http::cors::CorsLayer;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 use crate::routes::restapi::auth::login::login;
 use crate::routes::restapi::auth::refresh_login::refresh_login;
@@ -23,6 +25,7 @@ where
     let state = AppState { asc, psc, gsc, lsc };
 
     Router::new()
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         .route("/login", post(login))
         .route("/refresh_login", post(refresh_login))
         .route("/create_profile", post(create_profile))
@@ -43,3 +46,12 @@ where
                 ]),
         )
 }
+#[derive(OpenApi)]
+#[openapi(paths(
+    crate::routes::restapi::auth::login::login,
+    crate::routes::restapi::auth::refresh_login::refresh_login,
+    crate::routes::restapi::profile::create_profile::create_profile,
+    crate::routes::restapi::game::start_game::start_game,
+    crate::routes::restapi::location::get_locations::get_locations,
+))]
+struct ApiDoc;
