@@ -32,19 +32,22 @@ services:
       retries: 5
 
   dynamodb-local:
-    image: amazon/dynamodb-local:latest
     container_name: dynamodb-local
+    image: amazon/dynamodb-local:latest
     ports:
       - "8000:8000"
+    build:
+      context: ./backend/db/dynamodb
+      dockerfile: dev/Dockerfile
     volumes:
       - ./backend/db/dynamodb/dynamodb-data:/home/dynamodblocal/data
     command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000 || exit 1"]
-      interval: 30s
-      timeout: 3s
+      test: ["CMD-SHELL", "curl http://localhost:8000 || exit 1"]
+      interval: 10s
+      timeout: 5s
       start_period: 5s
-      retries: 3
+      retries: 5
 
   dynamodb-admin:
     image: aaronshaf/dynamodb-admin
@@ -52,15 +55,30 @@ services:
     ports:
       - "8001:8001"
     env_file:
-      - backend/db/dynamodb/dev/.env
+      - ./backend/db/dynamodb/dev/.env
     depends_on:
-      - dynamodb-local
+      dynamodb-local:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8001"]
-      interval: 30s
-      timeout: 3s
-      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
       retries: 3
+      
+  redis:
+    image: redis:7.2.4-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      start_period: 5s
+      retries: 5
   
   postgresql-migration:
     container_name: postgresql-migration
@@ -126,6 +144,26 @@ services:
       mysql-migration:
         condition: service_completed_successfully
 
+  gameservice:
+    container_name: gameservice
+    build:
+      context: backend/gameservice
+      dockerfile: dev/Dockerfile
+    ports:
+      - "50054:50054"
+    volumes:
+      - ./backend/gameservice:/app
+      - rust-cargo-registry:/usr/local/cargo/registry
+      - rust-cargo-git:/usr/local/cargo/git
+      - rust-target:/usr/local/cargo/target
+    env_file:
+      - backend/gameservice/dev/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+      dynamodb-local:
+        condition: service_healthy
+
   bff:
     container_name: bff
     build:
@@ -141,8 +179,12 @@ services:
     env_file:
       - backend/bff/dev/.env
     depends_on:
-      - authservice
-      - profileservice
+      authservice:
+        condition: service_started
+      profileservice:
+        condition: service_started
+      gameservice:
+        condition: service_started
 
 volumes:
   rust-cargo-registry:
@@ -150,4 +192,5 @@ volumes:
   rust-target:
   go-build-cache:
   go-mod-cache:
-
+  redis-data:
+  dynamodb-data:

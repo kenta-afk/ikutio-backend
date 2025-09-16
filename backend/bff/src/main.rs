@@ -8,6 +8,8 @@ use services::profileserviceclient::ProfileServiceClient;
 use tokio::net::TcpListener;
 use tracing::Level;
 
+use crate::services::game_service_client::GameServiceClient;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv::from_path("dev/.env").expect("Failed to load .env file");
@@ -30,6 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let host = env::var("BFF").expect("BFF must be set");
     let auth_service = env::var("AUTHSERVICE").expect("AUTHSERVICE must be set");
     let profile_service = env::var("PROFILESERVICE").expect("PROFILESERVICE must be set");
+    let game_service = env::var("GAMESERVICE").expect("GAMESERVICE must be set");
 
     let auth_client = loop {
         match AuthServiceClient::connect(format!("http://{auth_service}")).await {
@@ -67,7 +70,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    let router = routes::router::create_routes(auth_client, profile_client);
+    let game_client = loop {
+        match GameServiceClient::connect(format!("http://{game_service}")).await {
+            Ok(client) => {
+                tracing::info!("Connected to GameService at {}", game_service);
+                break client;
+            }
+            Err(e) => {
+                tracing::error!(
+                    "Failed to connect to GameService: {}. Retrying in 5 seconds...",
+                    e
+                );
+
+                tracing::info!("Retrying connection to GameService...");
+                tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+            }
+        }
+    };
+
+    let router = routes::router::create_routes(auth_client, profile_client, game_client);
 
     let listener = TcpListener::bind(host).await?;
 
