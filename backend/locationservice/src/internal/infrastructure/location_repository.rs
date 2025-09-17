@@ -55,7 +55,7 @@ impl LocationRepository for LocationRepositoryImpl {
 
         Ok(())
     }
-    async fn get(&self, user_id: UserId) -> Result<Locations, DbError> {
+    async fn get(&self, user_id: UserId) -> Result<Vec<Locations>, DbError> {
         // user_idでスキャンし、is_finished=falseのもののみを取得
         let result = self
             .client
@@ -68,11 +68,11 @@ impl LocationRepository for LocationRepositoryImpl {
             .await
             .map_err(|e| DbError::Infrastructure(e.to_string()))?;
 
-        let mut all_locations = Vec::new();
+        let mut locations_list = Vec::new();
 
         if let Some(items) = result.items {
-            if let Some(first_item) = items.first() {
-                let location_id = first_item
+            for item in items {
+                let location_id = item
                     .get("location_id")
                     .and_then(|v| v.as_s().ok())
                     .and_then(|s| {
@@ -84,11 +84,9 @@ impl LocationRepository for LocationRepositoryImpl {
                         )
                     })?;
 
-                for item in items {
-                    if let Some(AttributeValue::L(location_list)) = item.get("locations") {
-                        let locations_vec: Vec<
-                            crate::internal::domain::models::location::Location,
-                        > = location_list
+                if let Some(AttributeValue::L(location_list)) = item.get("locations") {
+                    let locations_vec: Vec<crate::internal::domain::models::location::Location> =
+                        location_list
                             .iter()
                             .filter_map(|attr| {
                                 if let AttributeValue::M(location_map) = attr {
@@ -121,16 +119,17 @@ impl LocationRepository for LocationRepositoryImpl {
                                 }
                             })
                             .collect();
-                        all_locations.extend(locations_vec);
-                    }
-                }
 
-                Ok(Locations { location_id, user_id, locations: all_locations, is_finished: false })
-            } else {
-                Err(DbError::Infrastructure("No location data found".to_string()))
+                    locations_list.push(Locations {
+                        location_id,
+                        user_id,
+                        locations: locations_vec,
+                        is_finished: false,
+                    });
+                }
             }
-        } else {
-            Err(DbError::Infrastructure("No location data found".to_string()))
         }
+
+        Ok(locations_list)
     }
 }

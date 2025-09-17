@@ -2,6 +2,7 @@ use uuid::Uuid;
 
 use crate::internal::infrastructure::uuid_generator::UuidGenerator;
 
+#[derive(Clone, Copy)]
 pub struct UserId(Uuid);
 impl UserId {
     pub fn from_uuid(uuid: Uuid) -> Self {

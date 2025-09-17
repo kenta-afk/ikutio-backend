@@ -9,5 +9,5 @@ use crate::internal::infrastructure::error::DbError;
 pub trait LocationRepository: Send + Sync + 'static {
     fn new(client: Client) -> Self;
     async fn save(&self, locations: Locations) -> Result<(), DbError>;
-    async fn get(&self, user_id: UserId) -> Result<Locations, DbError>;
+    async fn get(&self, user_id: UserId) -> Result<Vec<Locations>, DbError>;
 }

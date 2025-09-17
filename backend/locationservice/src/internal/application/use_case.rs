@@ -1,9 +1,16 @@
+use serde::{Deserialize, Serialize};
 use tonic::{Request, Response, Status};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LocationGroup {
+    pub location_id: String,
+    pub locations: Vec<Location>,
+}
 
 use crate::internal::domain::location_repository::LocationRepository;
 use crate::internal::domain::models::error::LocationError;
 use crate::internal::domain::models::id::{LocationId, UserId};
-use crate::internal::domain::models::location::Locations;
+use crate::internal::domain::models::location::{Location, Locations};
 use crate::internal::infrastructure::uuid_generator::UuidGenerator;
 use crate::proto::location_service_server::LocationService;
 use crate::proto::{GetLocationReply, GetLocationRequest, PostLocationReply, PostLocationRequest};
@@ -68,15 +75,21 @@ where
             uuid::Uuid::parse_str(user_id_str).map_err(|_| LocationError::InvalidInput)?;
         let user_id = UserId::from_uuid(user_uuid);
 
-        let mut locations = self.location_repository.get(user_id).await?;
+        let locations_list = self.location_repository.get(user_id).await?;
 
-        // Vec<Location>をJSON文字列に変換
-        let locations_json = serde_json::to_string(&locations.locations)
+        // location_id毎にグループ化
+        let mut location_groups = Vec::new();
+        for locations in locations_list {
+            let group = LocationGroup {
+                location_id: locations.location_id.to_string(),
+                locations: locations.locations,
+            };
+            location_groups.push(group);
+        }
+
+        // LocationGroupsをJSON文字列に変換
+        let locations_json = serde_json::to_string(&location_groups)
             .map_err(|e| LocationError::InternalError(e.to_string()))?;
-
-        // is_finishedをtrueに更新してsave
-        locations.finished();
-        self.location_repository.save(locations).await?;
 
         Ok(GetLocationReply { locations: locations_json })
     }
