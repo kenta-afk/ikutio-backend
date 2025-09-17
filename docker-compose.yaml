@@ -164,7 +164,7 @@ services:
     container_name: profileservice
     build: 
       context: backend/profileservice
-      dockerfile: dev/Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "50051:50051"
     volumes:  
@@ -172,7 +172,7 @@ services:
       - go-build-cache:/root/.cache/go-build
       - go-mod-cache:/go/pkg/mod  
     env_file:
-      - backend/profileservice/dev/.env 
+      - backend/profileservice/.env 
     depends_on:
       mysql:
         condition: service_healthy

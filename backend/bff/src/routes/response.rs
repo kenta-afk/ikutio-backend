@@ -15,6 +15,10 @@ impl AppError {
     pub fn bad_request(message: impl std::fmt::Display) -> Self {
         Self((StatusCode::BAD_REQUEST, message.to_string()).into_response())
     }
+
+    pub fn unauthorized(message: impl std::fmt::Display) -> Self {
+        Self((StatusCode::UNAUTHORIZED, message.to_string()).into_response())
+    }
 }
 
 impl IntoResponse for AppError {

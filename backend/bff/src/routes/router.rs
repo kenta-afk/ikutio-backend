@@ -54,7 +54,6 @@ where
     crate::routes::restapi::auth::refresh_login::refresh_login,
     crate::routes::restapi::profile::create_profile::create_profile,
     crate::routes::restapi::profile::get_profile::get_profile,
-    crate::routes::restapi::game::start_game::start_game,
     crate::routes::restapi::location::get_locations::get_locations,
 ))]
 struct ApiDoc;
