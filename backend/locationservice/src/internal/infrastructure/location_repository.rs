@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::Client;
 use aws_sdk_dynamodb::types::AttributeValue;
-use uuid::Uuid;
 
 use crate::internal::domain::location_repository::LocationRepository;
 use crate::internal::domain::models::id::UserId;
@@ -21,7 +20,17 @@ impl LocationRepository for LocationRepositoryImpl {
     }
     async fn save(&self, locations: Locations) -> Result<(), DbError> {
         let mut item = HashMap::new();
+        let timestamp =
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis()
+                as i64;
+
+        // sort_keyとしてtimestampを使用して複数レコードを保存
         item.insert("user_id".to_string(), AttributeValue::S(locations.user_id.to_string()));
+        item.insert(
+            "location_id".to_string(),
+            AttributeValue::S(locations.location_id.to_string()),
+        );
+        item.insert("timestamp".to_string(), AttributeValue::N(timestamp.to_string()));
 
         // Vec<Location>をDynamoDBのList形式に変換
         let location_list: Vec<AttributeValue> = locations
@@ -46,64 +55,81 @@ impl LocationRepository for LocationRepositoryImpl {
 
         Ok(())
     }
-    async fn get(&self, user_id: UserId) -> Result<Locations, DbError> {
+    async fn get(&self, user_id: UserId) -> Result<Vec<Locations>, DbError> {
+        // user_idでスキャンし、is_finished=falseのもののみを取得
         let result = self
             .client
-            .get_item()
+            .scan()
             .table_name("locations")
-            .key("user_id", AttributeValue::S(user_id.to_string()))
+            .filter_expression("user_id = :user_id AND is_finished = :is_finished")
+            .expression_attribute_values(":user_id", AttributeValue::S(user_id.to_string()))
+            .expression_attribute_values(":is_finished", AttributeValue::Bool(false))
             .send()
             .await
             .map_err(|e| DbError::Infrastructure(e.to_string()))?;
 
-        if let Some(item) = result.item {
-            // DynamoDBのList形式からVec<Location>に変換
-            let locations_vec = if let Some(AttributeValue::L(location_list)) =
-                item.get("locations")
-            {
-                location_list
-                    .iter()
-                    .filter_map(|attr| {
-                        if let AttributeValue::M(location_map) = attr {
-                            let latitude =
-                                location_map.get("latitude")?.as_n().ok()?.parse::<f64>().ok()?;
-                            let longitude =
-                                location_map.get("longitude")?.as_n().ok()?.parse::<f64>().ok()?;
-                            let timestamp =
-                                location_map.get("timestamp")?.as_n().ok()?.parse::<i64>().ok()?;
+        let mut locations_list = Vec::new();
 
-                            Some(crate::internal::domain::models::location::Location {
-                                latitude,
-                                longitude,
-                                timestamp,
-                            })
-                        } else {
-                            None
-                        }
+        if let Some(items) = result.items {
+            for item in items {
+                let location_id = item
+                    .get("location_id")
+                    .and_then(|v| v.as_s().ok())
+                    .and_then(|s| {
+                        crate::internal::domain::models::id::LocationId::from_string(s.clone()).ok()
                     })
-                    .collect()
-            } else {
-                Vec::new()
-            };
+                    .ok_or_else(|| {
+                        DbError::Infrastructure(
+                            "Invalid location_id format in saved data".to_string(),
+                        )
+                    })?;
 
-            let user_id_str =
-                item.get("user_id").and_then(|v| v.as_s().ok()).map(|s| s.as_str()).unwrap_or("");
-            let user_id = Uuid::parse_str(user_id_str)
-                .map(UserId::from_uuid)
-                .map_err(|_| DbError::Infrastructure("Invalid UUID format".to_string()))?;
+                if let Some(AttributeValue::L(location_list)) = item.get("locations") {
+                    let locations_vec: Vec<crate::internal::domain::models::location::Location> =
+                        location_list
+                            .iter()
+                            .filter_map(|attr| {
+                                if let AttributeValue::M(location_map) = attr {
+                                    let latitude = location_map
+                                        .get("latitude")?
+                                        .as_n()
+                                        .ok()?
+                                        .parse::<f64>()
+                                        .ok()?;
+                                    let longitude = location_map
+                                        .get("longitude")?
+                                        .as_n()
+                                        .ok()?
+                                        .parse::<f64>()
+                                        .ok()?;
+                                    let timestamp = location_map
+                                        .get("timestamp")?
+                                        .as_n()
+                                        .ok()?
+                                        .parse::<i64>()
+                                        .ok()?;
 
-            let locations = Locations {
-                user_id,
-                locations: locations_vec,
-                is_finished: item
-                    .get("is_finished")
-                    .and_then(|v| v.as_bool().ok())
-                    .copied()
-                    .unwrap_or(false),
-            };
-            Ok(locations)
-        } else {
-            Err(DbError::NotFound("Locations not found".to_string()))
+                                    Some(crate::internal::domain::models::location::Location {
+                                        latitude,
+                                        longitude,
+                                        timestamp,
+                                    })
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect();
+
+                    locations_list.push(Locations {
+                        location_id,
+                        user_id,
+                        locations: locations_vec,
+                        is_finished: false,
+                    });
+                }
+            }
         }
+
+        Ok(locations_list)
     }
 }

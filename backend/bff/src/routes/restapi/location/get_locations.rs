@@ -17,8 +17,14 @@ pub struct LocationData {
 }
 
 #[derive(Serialize, Deserialize, Debug, ToSchema)]
-pub struct LocationsResponse {
+pub struct LocationGroup {
+    pub location_id: String,
     pub locations: Vec<LocationData>,
+}
+
+#[derive(Serialize, Deserialize, Debug, ToSchema)]
+pub struct LocationsResponse {
+    pub location_groups: Vec<LocationGroup>,
 }
 
 #[utoipa::path(
@@ -41,10 +47,12 @@ where
         .await
         .map_err(AppError::internal_error)?;
 
-    // Parse the JSON string into a Vec<LocationData>
-    let locations: Vec<LocationData> = serde_json::from_str(&response.locations)
-        .map_err(|e| AppError::internal_error(format!("Failed to parse locations JSON: {e}")))?;
+    // Parse the JSON string into location groups
+    let location_groups: Vec<LocationGroup> =
+        serde_json::from_str(&response.locations).map_err(|e| {
+            AppError::internal_error(format!("Failed to parse location groups JSON: {e}"))
+        })?;
 
-    let locations_response = LocationsResponse { locations };
+    let locations_response = LocationsResponse { location_groups };
     Ok(Json(locations_response))
 }

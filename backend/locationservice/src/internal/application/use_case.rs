@@ -1,24 +1,35 @@
+use serde::{Deserialize, Serialize};
 use tonic::{Request, Response, Status};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LocationGroup {
+    pub location_id: String,
+    pub locations: Vec<Location>,
+}
 
 use crate::internal::domain::location_repository::LocationRepository;
 use crate::internal::domain::models::error::LocationError;
-use crate::internal::domain::models::id::UserId;
-use crate::internal::domain::models::location::Locations;
+use crate::internal::domain::models::id::{LocationId, UserId};
+use crate::internal::domain::models::location::{Location, Locations};
+use crate::internal::infrastructure::uuid_generator::UuidGenerator;
 use crate::proto::location_service_server::LocationService;
 use crate::proto::{GetLocationReply, GetLocationRequest, PostLocationReply, PostLocationRequest};
 
-pub struct LocationServiceImpl<LR>
-where
-    LR: LocationRepository, {
-    location_repository: LR,
-}
-
-impl<LR> LocationServiceImpl<LR>
+pub struct LocationServiceImpl<LR, UG>
 where
     LR: LocationRepository,
+    UG: UuidGenerator, {
+    location_repository: LR,
+    uuid_generator: UG,
+}
+
+impl<LR, UG> LocationServiceImpl<LR, UG>
+where
+    LR: LocationRepository,
+    UG: UuidGenerator,
 {
-    pub fn new(location_repository: LR) -> Self {
-        Self { location_repository }
+    pub fn new(location_repository: LR, uuid_generator: UG) -> Self {
+        Self { location_repository, uuid_generator }
     }
 
     pub async fn save_locations(
@@ -35,6 +46,7 @@ where
         let user_uuid =
             uuid::Uuid::parse_str(user_id_str).map_err(|_| LocationError::InvalidInput)?;
         let user_id = UserId::from_uuid(user_uuid);
+        let location_id = LocationId::new(&self.uuid_generator);
 
         let request = request.into_inner();
         let locations_json = request.locations;
@@ -43,7 +55,7 @@ where
         let locations_vec: Vec<crate::internal::domain::models::location::Location> =
             serde_json::from_str(&locations_json).map_err(|_| LocationError::InvalidInput)?;
 
-        let locations = Locations::new(user_id, locations_vec, false);
+        let locations = Locations::new(location_id, user_id, locations_vec, false);
         self.location_repository.save(locations).await?;
         Ok(PostLocationReply {})
     }
@@ -63,10 +75,20 @@ where
             uuid::Uuid::parse_str(user_id_str).map_err(|_| LocationError::InvalidInput)?;
         let user_id = UserId::from_uuid(user_uuid);
 
-        let locations = self.location_repository.get(user_id).await?;
+        let locations_list = self.location_repository.get(user_id).await?;
 
-        // Vec<Location>をJSON文字列に変換
-        let locations_json = serde_json::to_string(&locations.locations)
+        // location_id毎にグループ化
+        let mut location_groups = Vec::new();
+        for locations in locations_list {
+            let group = LocationGroup {
+                location_id: locations.location_id.to_string(),
+                locations: locations.locations,
+            };
+            location_groups.push(group);
+        }
+
+        // LocationGroupsをJSON文字列に変換
+        let locations_json = serde_json::to_string(&location_groups)
             .map_err(|e| LocationError::InternalError(e.to_string()))?;
 
         Ok(GetLocationReply { locations: locations_json })
@@ -74,9 +96,10 @@ where
 }
 
 #[tonic::async_trait]
-impl<LR> LocationService for LocationServiceImpl<LR>
+impl<LR, UG> LocationService for LocationServiceImpl<LR, UG>
 where
     LR: LocationRepository,
+    UG: UuidGenerator,
 {
     async fn post_location(
         &self,

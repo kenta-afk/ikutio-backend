@@ -12,6 +12,7 @@ use tracing::Level;
 use crate::internal::application::use_case::LocationServiceImpl;
 use crate::internal::domain::location_repository::LocationRepository;
 use crate::internal::infrastructure::location_repository::LocationRepositoryImpl;
+use crate::internal::infrastructure::uuid_generator::UuidGeneratorImpl;
 use crate::proto::location_service_server::LocationServiceServer;
 
 #[tokio::main]
@@ -46,7 +47,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let location_service = env::var("LOCATIONSERVICE").expect("LOCATIONSERVICE must be set");
     tracing::info!("Starting LlocationService at {}", location_service);
 
-    let game_service = LocationServiceImpl::new(LocationRepositoryImpl::new(client));
+    let game_service =
+        LocationServiceImpl::new(LocationRepositoryImpl::new(client), UuidGeneratorImpl);
 
     tracing::info!("LocationService is running...");
 
