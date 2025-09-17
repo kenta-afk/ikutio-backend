@@ -10,6 +10,7 @@ use crate::routes::restapi::auth::refresh_login::refresh_login;
 use crate::routes::restapi::game::start_game::start_game;
 use crate::routes::restapi::location::get_locations::get_locations;
 use crate::routes::restapi::profile::create_profile::create_profile;
+use crate::routes::restapi::profile::get_profile::get_profile;
 use crate::routes::state::AppState;
 use crate::services::authserviceclient::AuthServiceClientTrait;
 use crate::services::gameserviceclient::GameServiceClientTrait;
@@ -29,6 +30,7 @@ where
         .route("/login", post(login))
         .route("/refresh_login", post(refresh_login))
         .route("/create_profile", post(create_profile))
+        .route("/get_profile", get(get_profile))
         .route("/start_game", get(start_game))
         .route("/get_locations", get(get_locations))
         .with_state(state)
@@ -51,6 +53,7 @@ where
     crate::routes::restapi::auth::login::login,
     crate::routes::restapi::auth::refresh_login::refresh_login,
     crate::routes::restapi::profile::create_profile::create_profile,
+    crate::routes::restapi::profile::get_profile::get_profile,
     crate::routes::restapi::game::start_game::start_game,
     crate::routes::restapi::location::get_locations::get_locations,
 ))]

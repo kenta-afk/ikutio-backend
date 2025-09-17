@@ -33,3 +33,16 @@ func (s *ProfileServiceImpl) CreateProfile(ctx context.Context, cmd commands.Cre
 
 	return responseDto, nil
 }
+
+func (s *ProfileServiceImpl) GetProfile(ctx context.Context, cmd commands.GetProfileCommand) (*dtos.GetProfileDto, error) {
+	profile, err := s.repo.FindByUserId(ctx, cmd.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	responseDto := &dtos.GetProfileDto{
+		Name: profile.Name,
+	}
+
+	return responseDto, nil
+}

@@ -5,6 +5,7 @@ option go_package = "./build";
 
 service ProfileService {
     rpc CreateProfile (CreateProfileRequest) returns (CreateProfileReply);
+    rpc GetProfile (GetProfileRequest) returns (GetProfileReply);
 }
 
 message CreateProfileRequest {
@@ -12,5 +13,11 @@ message CreateProfileRequest {
 }
 
 message CreateProfileReply {
+}
+
+message GetProfileRequest {
+}
+
+message GetProfileReply {
     string name = 1;
 }

@@ -67,7 +67,6 @@ func (x *CreateProfileRequest) GetName() string {
 
 type CreateProfileReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -102,7 +101,80 @@ func (*CreateProfileReply) Descriptor() ([]byte, []int) {
 	return file_profile_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CreateProfileReply) GetName() string {
+type GetProfileRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProfileRequest) Reset() {
+	*x = GetProfileRequest{}
+	mi := &file_profile_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProfileRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProfileRequest) ProtoMessage() {}
+
+func (x *GetProfileRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_profile_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProfileRequest.ProtoReflect.Descriptor instead.
+func (*GetProfileRequest) Descriptor() ([]byte, []int) {
+	return file_profile_proto_rawDescGZIP(), []int{2}
+}
+
+type GetProfileReply struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetProfileReply) Reset() {
+	*x = GetProfileReply{}
+	mi := &file_profile_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetProfileReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetProfileReply) ProtoMessage() {}
+
+func (x *GetProfileReply) ProtoReflect() protoreflect.Message {
+	mi := &file_profile_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetProfileReply.ProtoReflect.Descriptor instead.
+func (*GetProfileReply) Descriptor() ([]byte, []int) {
+	return file_profile_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GetProfileReply) GetName() string {
 	if x != nil {
 		return x.Name
 	}
@@ -115,11 +187,15 @@ const file_profile_proto_rawDesc = "" +
 	"\n" +
 	"\rprofile.proto\x12\x0eprofileservice\"*\n" +
 	"\x14CreateProfileRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"(\n" +
-	"\x12CreateProfileReply\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name2k\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"\x14\n" +
+	"\x12CreateProfileReply\"\x13\n" +
+	"\x11GetProfileRequest\"%\n" +
+	"\x0fGetProfileReply\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name2\xbd\x01\n" +
 	"\x0eProfileService\x12Y\n" +
-	"\rCreateProfile\x12$.profileservice.CreateProfileRequest\x1a\".profileservice.CreateProfileReplyB\tZ\a./buildb\x06proto3"
+	"\rCreateProfile\x12$.profileservice.CreateProfileRequest\x1a\".profileservice.CreateProfileReply\x12P\n" +
+	"\n" +
+	"GetProfile\x12!.profileservice.GetProfileRequest\x1a\x1f.profileservice.GetProfileReplyB\tZ\a./buildb\x06proto3"
 
 var (
 	file_profile_proto_rawDescOnce sync.Once
@@ -133,16 +209,20 @@ func file_profile_proto_rawDescGZIP() []byte {
 	return file_profile_proto_rawDescData
 }
 
-var file_profile_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_profile_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_profile_proto_goTypes = []any{
 	(*CreateProfileRequest)(nil), // 0: profileservice.CreateProfileRequest
 	(*CreateProfileReply)(nil),   // 1: profileservice.CreateProfileReply
+	(*GetProfileRequest)(nil),    // 2: profileservice.GetProfileRequest
+	(*GetProfileReply)(nil),      // 3: profileservice.GetProfileReply
 }
 var file_profile_proto_depIdxs = []int32{
 	0, // 0: profileservice.ProfileService.CreateProfile:input_type -> profileservice.CreateProfileRequest
-	1, // 1: profileservice.ProfileService.CreateProfile:output_type -> profileservice.CreateProfileReply
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	2, // 1: profileservice.ProfileService.GetProfile:input_type -> profileservice.GetProfileRequest
+	1, // 2: profileservice.ProfileService.CreateProfile:output_type -> profileservice.CreateProfileReply
+	3, // 3: profileservice.ProfileService.GetProfile:output_type -> profileservice.GetProfileReply
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -159,7 +239,7 @@ func file_profile_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_profile_proto_rawDesc), len(file_profile_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
