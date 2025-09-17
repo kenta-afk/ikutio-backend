@@ -2,7 +2,9 @@ use async_trait::async_trait;
 use tonic::transport::Channel;
 
 pub use self::profile_service_client::ProfileServiceClient;
-use crate::services::{CreateProfileReply, CreateProfileRequest};
+use crate::services::{
+    CreateProfileReply, CreateProfileRequest, GetProfileReply, GetProfileRequest,
+};
 
 #[async_trait]
 pub trait ProfileServiceClientTrait: Send + Sync + 'static + Clone {
@@ -11,6 +13,11 @@ pub trait ProfileServiceClientTrait: Send + Sync + 'static + Clone {
         request: CreateProfileRequest,
         user_id: String,
     ) -> Result<CreateProfileReply, tonic::Status>;
+    async fn get_profile(
+        &mut self,
+        request: GetProfileRequest,
+        user_id: String,
+    ) -> Result<GetProfileReply, tonic::Status>;
 }
 
 #[async_trait]
@@ -24,6 +31,17 @@ impl ProfileServiceClientTrait for ProfileServiceClient<Channel> {
         request.metadata_mut().insert("user-id", user_id.parse().unwrap());
 
         let response = self.create_profile(request).await?;
+        Ok(response.into_inner())
+    }
+    async fn get_profile(
+        &mut self,
+        request: GetProfileRequest,
+        user_id: String,
+    ) -> Result<GetProfileReply, tonic::Status> {
+        let mut request = tonic::Request::new(request);
+        request.metadata_mut().insert("user-id", user_id.parse().unwrap());
+
+        let response = self.get_profile(request).await?;
         Ok(response.into_inner())
     }
 }
@@ -132,6 +150,21 @@ pub mod profile_service_client {
             let mut req = request.into_request();
             req.extensions_mut()
                 .insert(GrpcMethod::new("profileservice.ProfileService", "CreateProfile"));
+            self.inner.unary(req, path, codec).await
+        }
+        pub async fn get_profile(
+            &mut self,
+            request: impl tonic::IntoRequest<super::GetProfileRequest>,
+        ) -> std::result::Result<tonic::Response<super::GetProfileReply>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::unknown(format!("Service was not ready: {}", e.into()))
+            })?;
+            let codec = tonic_prost::ProstCodec::default();
+            let path =
+                http::uri::PathAndQuery::from_static("/profileservice.ProfileService/GetProfile");
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("profileservice.ProfileService", "GetProfile"));
             self.inner.unary(req, path, codec).await
         }
     }

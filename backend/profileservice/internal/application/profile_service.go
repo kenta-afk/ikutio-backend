@@ -57,14 +57,49 @@ func (s *ProfileGRPCService) CreateProfile(ctx context.Context, req *pb.CreatePr
 		Name: req.Name,
 	}
 
-	dto, err := s.profileService.CreateProfile(ctx, cmd)
+	_, err = s.profileService.CreateProfile(ctx, cmd)
 	if err != nil {
 		slog.Error("Failed to create profile", "error", err)
 		return nil, err
 	}
 
 	// 成功時は作成されたプロファイル情報を返す
-	return &pb.CreateProfileReply{
+	return &pb.CreateProfileReply{}, nil
+}
+
+func (s *ProfileGRPCService) GetProfile(ctx context.Context, req *pb.GetProfileRequest) (*pb.GetProfileReply, error) {
+	slog.Info("GetProfile called")
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		slog.Error("Failed to get metadata from context")
+		return nil, errors.New("failed to get metadata from context")
+	}
+
+	userIdStrings := md.Get("user-id")
+	if len(userIdStrings) == 0 {
+		slog.Error("user-id not found in metadata")
+		return nil, errors.New("user-id not found in metadata")
+	}
+
+	userIdString := userIdStrings[0]
+	userId, err := uuid.Parse(userIdString)
+	if err != nil {
+		slog.Error("Failed to parse user_id from metadata", "user_id", userIdString, "error", err)
+		return nil, err
+	}
+
+	cmd := commands.GetProfileCommand{
+		Id: models.UserId(userId),
+	}
+
+	dto, err := s.profileService.GetProfile(ctx, cmd)
+	if err != nil {
+		slog.Error("Failed to get profile", "error", err)
+		return nil, err
+	}
+
+	return &pb.GetProfileReply{
 		Name: dto.Name,
 	}, nil
 }

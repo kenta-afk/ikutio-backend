@@ -8,4 +8,5 @@ import (
 
 type ProfileRepository interface {
 	Save(ctx context.Context, profile *models.Profile) error
+	FindByUserId(ctx context.Context, userId models.UserId) (*models.Profile, error)
 }

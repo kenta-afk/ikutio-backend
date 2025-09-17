@@ -5,8 +5,14 @@ pub struct CreateProfileRequest {
     #[prost(string, tag="1")]
     pub name: ::prost::alloc::string::String,
 }
-#[derive(Clone, PartialEq, ::prost::Message, Serialize, Deserialize, ToSchema)]
+#[derive(Clone, Copy, PartialEq, ::prost::Message, Serialize, Deserialize, ToSchema)]
 pub struct CreateProfileReply {
+}
+#[derive(Clone, Copy, PartialEq, ::prost::Message, Serialize, Deserialize, ToSchema)]
+pub struct GetProfileRequest {
+}
+#[derive(Clone, PartialEq, ::prost::Message, Serialize, Deserialize, ToSchema)]
+pub struct GetProfileReply {
     #[prost(string, tag="1")]
     pub name: ::prost::alloc::string::String,
 }
