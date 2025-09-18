@@ -9,7 +9,7 @@ use crate::internal::infrastructure::error::DbError;
 pub struct AuthRepositoryImpl {
     pool: PgPool,
 }
-
+653cd58de3f241c49ccd6a1aec45c83f",
 #[async_trait]
 impl AuthRepository for AuthRepositoryImpl {
     fn new(pool: PgPool) -> Self {

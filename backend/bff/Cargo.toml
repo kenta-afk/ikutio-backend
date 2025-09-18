@@ -1,7 +1,11 @@
 [package]
 name = "bff"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+
+[[bin]]
+name = "bffservice"
+path = "src/main.rs"
 
 [dependencies]
 async-trait = "0.1.89"

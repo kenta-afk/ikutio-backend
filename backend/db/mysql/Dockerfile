@@ -6,7 +6,7 @@ RUN apk add --no-cache mold clang openssl-dev musl-dev openssl-libs-static
 
 # Use mold as the linker for faster builds
 ENV RUSTFLAGS="-C linker=clang -C link-arg=-fuse-ld=mold"
-RUN cargo install sqlx-cli --no-default-features --features native-tls,postgres
+RUN cargo install sqlx-cli --no-default-features --features native-tls,mysql
 
 # Copy migration files
 COPY . migrations/
@@ -16,7 +16,7 @@ COPY <<EOF /app/run-migrations.sh
 #!/bin/sh
 set -e
 
-echo "Starting migration process..."
+echo "Starting MySQL migration process..."
 echo "DATABASE_URL: \$DATABASE_URL"
 
 echo "Creating database..."
@@ -34,7 +34,7 @@ else
     exit 1
 fi
 
-echo "Migration process finished"
+echo "MySQL migration process finished"
 EOF
 
 RUN chmod +x /app/run-migrations.sh

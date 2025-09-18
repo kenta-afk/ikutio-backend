@@ -1,5 +1,5 @@
-use axum::Json;
 use axum::extract::State;
+use axum::Json;
 
 use crate::routes::response::{AppError, AppResult};
 use crate::routes::state::AuthService;

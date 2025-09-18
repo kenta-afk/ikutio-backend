@@ -4,14 +4,14 @@ use axum::extract::ws::{Message, WebSocket};
 use axum::extract::{Query, State, WebSocketUpgrade};
 use axum::response::Response;
 use futures::{SinkExt, StreamExt};
-use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
+use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::Deserialize;
 
 use crate::routes::extractor::Claims;
 use crate::routes::response::{AppError, AppResult};
 use crate::routes::state::GameService;
-use crate::services::StartGameRequest;
 use crate::services::gameserviceclient::GameServiceClientTrait;
+use crate::services::StartGameRequest;
 
 #[derive(Debug, Deserialize)]
 pub struct JwtQuery {

@@ -17,7 +17,7 @@ use crate::proto::auth_service_server::AuthServiceServer;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    dotenv::from_path("dev/.env").expect("Failed to load .env file");
+    dotenv::from_path("dev/.env").ok();
 
     let log_level = match env::var("LOG_LEVEL").as_deref() {
         Ok("INFO") => Level::INFO,

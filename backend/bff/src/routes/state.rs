@@ -31,11 +31,11 @@ pub struct GameService<T>(pub T);
 pub struct LocationService<T>(pub T);
 
 impl<
-    ASC: AuthServiceClientTrait,
-    PSC: ProfileServiceClientTrait,
-    GSC: GameServiceClientTrait,
-    LSC: LocationServiceClientTrait,
-> FromRef<AppState<ASC, PSC, GSC, LSC>> for AuthService<ASC>
+        ASC: AuthServiceClientTrait,
+        PSC: ProfileServiceClientTrait,
+        GSC: GameServiceClientTrait,
+        LSC: LocationServiceClientTrait,
+    > FromRef<AppState<ASC, PSC, GSC, LSC>> for AuthService<ASC>
 {
     fn from_ref(state: &AppState<ASC, PSC, GSC, LSC>) -> Self {
         Self(state.asc.clone())
@@ -43,11 +43,11 @@ impl<
 }
 
 impl<
-    ASC: AuthServiceClientTrait,
-    PSC: ProfileServiceClientTrait,
-    GSC: GameServiceClientTrait,
-    LSC: LocationServiceClientTrait,
-> FromRef<AppState<ASC, PSC, GSC, LSC>> for ProfileService<PSC>
+        ASC: AuthServiceClientTrait,
+        PSC: ProfileServiceClientTrait,
+        GSC: GameServiceClientTrait,
+        LSC: LocationServiceClientTrait,
+    > FromRef<AppState<ASC, PSC, GSC, LSC>> for ProfileService<PSC>
 {
     fn from_ref(state: &AppState<ASC, PSC, GSC, LSC>) -> Self {
         Self(state.psc.clone())
@@ -55,22 +55,22 @@ impl<
 }
 
 impl<
-    ASC: AuthServiceClientTrait,
-    PSC: ProfileServiceClientTrait,
-    GSC: GameServiceClientTrait,
-    LSC: LocationServiceClientTrait,
-> FromRef<AppState<ASC, PSC, GSC, LSC>> for GameService<GSC>
+        ASC: AuthServiceClientTrait,
+        PSC: ProfileServiceClientTrait,
+        GSC: GameServiceClientTrait,
+        LSC: LocationServiceClientTrait,
+    > FromRef<AppState<ASC, PSC, GSC, LSC>> for GameService<GSC>
 {
     fn from_ref(state: &AppState<ASC, PSC, GSC, LSC>) -> Self {
         Self(state.gsc.clone())
     }
 }
 impl<
-    ASC: AuthServiceClientTrait,
-    PSC: ProfileServiceClientTrait,
-    GSC: GameServiceClientTrait,
-    LSC: LocationServiceClientTrait,
-> FromRef<AppState<ASC, PSC, GSC, LSC>> for LocationService<LSC>
+        ASC: AuthServiceClientTrait,
+        PSC: ProfileServiceClientTrait,
+        GSC: GameServiceClientTrait,
+        LSC: LocationServiceClientTrait,
+    > FromRef<AppState<ASC, PSC, GSC, LSC>> for LocationService<LSC>
 {
     fn from_ref(state: &AppState<ASC, PSC, GSC, LSC>) -> Self {
         Self(state.lsc.clone())

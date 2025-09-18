@@ -18,7 +18,7 @@ use crate::proto::game_service_server::GameServiceServer;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    dotenv::from_path("dev/.env").expect("Failed to load .env file");
+    dotenv::from_path("dev/.env").ok();
 
     let log_level = match env::var("LOG_LEVEL").as_deref() {
         Ok("INFO") => Level::INFO,
@@ -38,10 +38,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ローカルのDynamoDBに接続するための設定を構築
     let shared_config = aws_config::from_env().load().await;
     let config_builder = aws_sdk_dynamodb::config::Builder::from(&shared_config);
-    let endpoint_url = env::var("ENDPOINT_URL").expect("ENDPOINT_URL must be set");
+    let endpoint_url = env::var("ENDPOINT_URL").ok();
 
     // エンドポイントURLをローカルのDynamoDBに指定
-    let config = config_builder.endpoint_url(endpoint_url).build();
+    let config = if let Some(url) = endpoint_url {
+        config_builder.endpoint_url(url).build()
+    } else {
+        config_builder.build()
+    };
     //　設定を反映してクライアントを再構築
     let client = Client::from_conf(config);
 

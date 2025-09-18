@@ -1,6 +1,6 @@
 use async_trait::async_trait;
-use tonic::Streaming;
 use tonic::transport::Channel;
+use tonic::Streaming;
 
 use crate::services::game_service_client::GameServiceClient;
 use crate::services::{StartGameReply, StartGameRequest};

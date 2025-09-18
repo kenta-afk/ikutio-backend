@@ -2,8 +2,8 @@ use std::env;
 
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
-use axum::http::{StatusCode, header};
-use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
+use axum::http::{header, StatusCode};
+use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::Deserialize;
 
 #[derive(Debug, Clone)]

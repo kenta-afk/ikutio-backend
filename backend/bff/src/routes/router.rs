@@ -1,6 +1,6 @@
-use axum::Router;
-use axum::http::{HeaderName, HeaderValue, Method, header};
+use axum::http::{header, HeaderName, HeaderValue, Method};
 use axum::routing::{get, post};
+use axum::Router;
 use tower_http::cors::CorsLayer;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;

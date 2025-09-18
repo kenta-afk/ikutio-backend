@@ -1,13 +1,13 @@
-use axum::Json;
 use axum::extract::State;
+use axum::Json;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::routes::extractor::AuthenticatedUser;
 use crate::routes::response::{AppError, AppResult};
 use crate::routes::state::LocationService;
-use crate::services::GetLocationRequest;
 use crate::services::locationserviceclient::LocationServiceClientTrait;
+use crate::services::GetLocationRequest;
 
 #[derive(Serialize, Deserialize, Debug, ToSchema)]
 pub struct LocationData {
