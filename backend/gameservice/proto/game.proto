@@ -1,0 +1,13 @@
+syntax = "proto3";
+package gameservice;
+
+service GameService {
+    rpc StartGame (StartGameRequest) returns (stream StartGameReply);
+}
+
+message StartGameRequest {
+}
+
+message StartGameReply {
+    uint32 timer = 1;
+}

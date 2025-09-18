@@ -1,6 +1,9 @@
 [workspace]  
 resolver = "2"  
 members = [
-    "backend/services/gameservice",   
-    "backendservices/bff"  
-]
+    "backend/authservice",
+    "backend/gameservice",   
+    "backend/bff", 
+    "backend/proto-builder", 
+    "backend/bff_mobile", 
+    "backend/locationservice"]
